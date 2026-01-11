@@ -78,7 +78,7 @@ export function HomePage({
             variants={{
               visible: {
                 transition: {
-                  staggerChildren: 0.05
+                  staggerChildren: 0.03
                 }
               }
             }}
@@ -137,28 +137,21 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
       className="idea-card"
       onClick={onClick}
       variants={{
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 10 },
         visible: { opacity: 1, y: 0 }
       }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="idea-card-header">
-        <h3 className="idea-card-title">{idea.title}</h3>
-        <StatusBadge status={idea.status} />
-      </div>
-
-      <p className="idea-card-preview">
-        {idea.analysis?.summary || idea.rawInput}
-      </p>
-
-      <div className="idea-card-footer">
-        <span className="idea-card-time">
+      <div className="idea-card-content">
+        <div className="idea-card-header">
+          <h3 className="idea-card-title">{idea.title}</h3>
+          <StatusBadge status={idea.status} />
+        </div>
+        <span className="idea-card-meta">
           {formatRelativeTime(idea.updatedAt)}
         </span>
-        <ChevronRight className="idea-card-arrow" />
       </div>
+      <ChevronRight className="idea-card-arrow" />
     </motion.div>
   )
 }

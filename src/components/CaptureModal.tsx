@@ -49,7 +49,8 @@ interface SpeechRecognitionInstance {
 export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const [mode, setMode] = useState<CaptureMode>('voice')
   const [voiceState, setVoiceState] = useState<VoiceState>('idle')
-  const [transcript, setTranscript] = useState('')
+  const [finalTranscript, setFinalTranscript] = useState('') // Only confirmed text
+  const [interimTranscript, setInterimTranscript] = useState('') // Live preview
   const [textInput, setTextInput] = useState('')
   const [duration, setDuration] = useState(0)
 
@@ -69,20 +70,24 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         recognition.lang = 'en-US'
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
-          let finalTranscript = ''
-          let interimTranscript = ''
+          let interim = ''
 
+          // Process all results
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const result = event.results[i]
             const transcriptText = result[0].transcript
+
             if (result.isFinal) {
-              finalTranscript += transcriptText
+              // Add finalized text to the final transcript
+              setFinalTranscript(prev => prev + transcriptText + ' ')
+              setInterimTranscript('') // Clear interim
             } else {
-              interimTranscript += transcriptText
+              // Show interim as live preview (don't accumulate)
+              interim = transcriptText
             }
           }
 
-          setTranscript(prev => prev + finalTranscript + interimTranscript)
+          setInterimTranscript(interim)
 
           // Reset silence timer on speech detection
           if (silenceTimerRef.current) {
@@ -99,7 +104,14 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         }
 
         recognition.onend = () => {
-          // Recognition ended - don't restart automatically
+          // Recognition ended - check if we should keep going
+          if (voiceState === 'recording' && recognitionRef.current) {
+            try {
+              recognitionRef.current.start()
+            } catch {
+              // Already stopped
+            }
+          }
         }
 
         recognitionRef.current = recognition
@@ -117,7 +129,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         clearTimeout(silenceTimerRef.current)
       }
     }
-  }, [])
+  }, [voiceState])
 
   const startRecording = () => {
     if (!recognitionRef.current) {
@@ -125,7 +137,8 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
       return
     }
 
-    setTranscript('')
+    setFinalTranscript('')
+    setInterimTranscript('')
     setDuration(0)
     setVoiceState('recording')
 
@@ -142,6 +155,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
 
   const stopRecording = () => {
     setVoiceState('stopped')
+    setInterimTranscript('') // Clear any remaining interim
 
     if (recognitionRef.current) {
       recognitionRef.current.stop()
@@ -163,8 +177,8 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
       startRecording()
     } else if (voiceState === 'recording') {
       stopRecording()
-    } else if (voiceState === 'stopped' && transcript) {
-      onCapture(transcript, true)
+    } else if (voiceState === 'stopped' && finalTranscript.trim()) {
+      onCapture(finalTranscript.trim(), true)
     }
   }
 
@@ -179,6 +193,9 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  // Combined display: final + interim (interim shown differently)
+  const displayTranscript = finalTranscript + interimTranscript
 
   return (
     <motion.div
@@ -232,7 +249,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             >
               {voiceState === 'recording' ? (
                 <Square size={40} />
-              ) : voiceState === 'stopped' && transcript ? (
+              ) : voiceState === 'stopped' && finalTranscript.trim() ? (
                 <Send size={40} />
               ) : (
                 <Mic size={40} />
@@ -246,10 +263,10 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             <p className="voice-hint">
               {voiceState === 'idle' && 'Tap to start recording'}
               {voiceState === 'recording' && 'Tap to stop, or pause speaking'}
-              {voiceState === 'stopped' && transcript && 'Tap to save your idea'}
+              {voiceState === 'stopped' && finalTranscript.trim() && 'Tap to save your idea'}
             </p>
 
-            {transcript && (
+            {displayTranscript && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -264,7 +281,11 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
                   overflow: 'auto'
                 }}
               >
-                "{transcript}"
+                <span>"{finalTranscript}</span>
+                {interimTranscript && (
+                  <span style={{ opacity: 0.5 }}>{interimTranscript}</span>
+                )}
+                <span>"</span>
               </motion.div>
             )}
           </div>
