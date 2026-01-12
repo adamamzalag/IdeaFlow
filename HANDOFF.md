@@ -1,69 +1,69 @@
-# IdeaFlow Status & Roadmap
+# IdeaFlow Session Handoff
 
 **Last Updated:** January 12, 2026
 
 ---
 
-## Current State: Frontend Prototype Complete
+## Current State: Frontend Complete, Ready for Backend
 
-The app has a complete, beautiful frontend with mock data. No backend yet.
+The app has a complete frontend deployed to Replit. No backend yet - data doesn't persist.
 
-### What's Built (Frontend)
+### What's Working
+- Home page with Active/Pursuing/Deferred tabs
+- Voice capture (fixed duplication bug on Android)
+- Text capture
+- Idea detail page with markdown analysis rendering
+- Chat UI (mock responses only)
+- Pursue/Defer actions (UI only)
+- Dark theme, animations, mobile-first design
+- **Deployed to Replit** - preview URL working
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Home page with idea list | Done | Active/Pursuing/Deferred tabs |
-| Capture modal | Done | Voice + text input |
-| Voice recording | Done | Web Speech API, continue recording feature |
-| Idea detail page | Done | Tabbed Analysis/Chat layout |
-| Markdown analysis rendering | Done | Tables, lists, blockquotes, headers |
-| Chat UI | Done | Messages render, input works |
-| Pursue/Defer actions | Done | UI only, state updates |
-| Dark theme | Done | Ice blue accent |
-| Mobile-first design | Done | Responsive, large touch targets |
-| Animations | Done | Framer Motion throughout |
-
-### What's NOT Built Yet
-
-| Feature | Priority | Notes |
-|---------|----------|-------|
-| Backend server | High | Express.js, API routes |
-| Database | High | PostgreSQL for persistence |
-| AI integration | High | Claude API for analysis + chat |
-| Real-time analysis updates | High | Chat insights update analysis |
-| Auth | Medium | Replit Auth (single user for now) |
-| PWA setup | Medium | Manifest, service worker, icons |
-| Replit deployment | Medium | Connect to Replit hosting |
+### What's NOT Working Yet
+- **No data persistence** - refresh loses everything (expected, no backend)
+- **No real AI** - analysis is mock data, chat doesn't connect to Claude
+- **No auth** - single user assumed
 
 ---
 
-## V1 Roadmap
+## Next Steps: Phase 2 (Backend Foundation)
 
-### Phase 1: Frontend (COMPLETE)
-- [x] Home page with tabs
-- [x] Capture modal (voice + text)
-- [x] Idea detail with Analysis/Chat tabs
-- [x] Markdown rendering for analysis
-- [x] Dark theme, animations, mobile-first
+### Who Does What
 
-### Phase 2: Backend Foundation (NEXT)
-- [ ] Set up Express.js server
-- [ ] PostgreSQL database with schema
-- [ ] API routes for CRUD operations
-- [ ] Connect frontend to backend
-- [ ] Data persistence (ideas save to DB)
+| Task | Who |
+|------|-----|
+| Write Express server code | Claude Code |
+| Write API routes | Claude Code |
+| Write database schema | Claude Code |
+| **Provision PostgreSQL** | Replit (Adam uses Replit Agent or dashboard) |
+| **Set environment variables** | Replit Secrets |
+| Connect frontend to backend | Claude Code |
 
-### Phase 3: AI Integration
-- [ ] Claude API integration
-- [ ] Background analysis generation
-- [ ] Chat with AI (real responses)
-- [ ] Analysis updates from chat
+### Phase 2 Tasks
 
-### Phase 4: Polish & Deploy
-- [ ] Replit Auth
-- [ ] PWA setup (installable on phone)
-- [ ] Deploy to Replit
-- [ ] Final testing on mobile
+1. **Replit: Add PostgreSQL database**
+   - Adam adds database to Replit project
+   - Gets connection string
+   - Stores in Replit Secrets as `DATABASE_URL`
+
+2. **Claude Code: Build backend**
+   - Express.js server
+   - Database schema (users, ideas, conversations)
+   - API routes: GET /ideas, POST /ideas, PATCH /ideas/:id
+   - Connect to PostgreSQL
+
+3. **Claude Code: Connect frontend**
+   - Replace mock data with API calls
+   - Test end-to-end
+
+### After Phase 2
+- Phase 3: AI Integration (Claude API for analysis + chat)
+- Phase 4: Auth + PWA + Deploy
+
+---
+
+## Deferred Items
+
+**Animation polish** - Do after Phase 2, before launch. The app needs a consistent animation pass (things appearing/disappearing feel jarring in some places). Should audit all interactions and apply consistent patterns.
 
 ---
 
@@ -73,13 +73,12 @@ The app has a complete, beautiful frontend with mock data. No backend yet.
 |-------|------------|--------|
 | Frontend | React + Vite + TypeScript | Done |
 | Animations | Framer Motion | Done |
-| Icons | Lucide React | Done |
+| Markdown | react-markdown + remark-gfm | Done |
 | Voice | Web Speech API | Done |
 | Backend | Express.js | Not started |
 | Database | PostgreSQL (Replit) | Not started |
 | AI | Claude API | Not started |
-| Auth | Replit Auth | Not started |
-| Hosting | Replit | Not started |
+| Hosting | Replit | Connected |
 
 ---
 
@@ -90,7 +89,7 @@ src/
 ├── App.tsx                    # Main app, routing, state
 ├── pages/
 │   ├── HomePage.tsx           # Ideas list + capture button
-│   └── IdeaDetailPage.tsx     # Analysis + Chat tabs
+│   └── IdeaDetailPage.tsx     # Analysis (markdown) + Chat tabs
 ├── components/
 │   └── CaptureModal.tsx       # Voice/text capture
 ├── styles/
@@ -98,28 +97,28 @@ src/
 │   └── app.css                # Component styles + markdown
 └── lib/
     ├── types.ts               # TypeScript types
-    └── mock-data.ts           # Sample ideas (to be replaced by DB)
+    └── mock-data.ts           # Sample ideas (replace with DB)
 ```
 
 ---
 
-## Next Session
+## Important Context
 
-**Start Phase 2: Backend Foundation**
-
-1. Set up Express.js server structure
-2. Define database schema (users, ideas, conversations)
-3. Create API routes
-4. Connect frontend to real data
+- **Adam is not technical** - explain things clearly, avoid jargon
+- **Replit handles infrastructure** - Claude Code writes code, Replit provisions database/hosting
+- **GitHub syncs to Replit** - push to GitHub, Replit auto-deploys
+- **Mobile-first** - always test on phone, not just desktop
+- **Design doc:** `/docs/plans/2026-01-10-ideaflow-design.md` has full V1 spec
 
 ---
 
 ## Links
 
 - **GitHub:** https://github.com/adamamzalag/IdeaFlow
+- **Replit:** Already imported, preview URL active
 - **Design Doc:** `/docs/plans/2026-01-10-ideaflow-design.md`
 - **Future Features:** `/docs/FUTURE_FEATURES.md`
 
 ---
 
-*This file is the single source of truth for project status.*
+*This file is the source of truth for project status. Update after each session.*
