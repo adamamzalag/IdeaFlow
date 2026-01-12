@@ -4,7 +4,7 @@ export const ideaStatusEnum = pgEnum('idea_status', ['processing', 'ready', 'pur
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
-  replitId: text('replit_id').unique(),
+  replitId: text('replit_id').unique().notNull(),
   profile: jsonb('profile'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -12,7 +12,7 @@ export const users = pgTable('users', {
 
 export const ideas = pgTable('ideas', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id),
+  userId: uuid('user_id').references(() => users.id).notNull(),
   rawInput: text('raw_input').notNull(),
   audioUrl: text('audio_url'),
   status: ideaStatusEnum('status').default('processing').notNull(),
