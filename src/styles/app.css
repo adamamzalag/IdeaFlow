@@ -269,39 +269,66 @@
 }
 
 /* ============================================
-   CAPTURE BUTTON (FAB) - Large & prominent
+   CAPTURE BUTTON - Large centered circle
    ============================================ */
 
-.capture-fab {
+/* Container constrains to app max-width so button centers properly */
+.capture-fab-container {
   position: fixed;
-  bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
-  right: var(--page-padding);
-  left: var(--page-padding);
-  max-width: calc(var(--page-max-width) - var(--page-padding) * 2);
-  margin: 0 auto;
+  bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
   display: flex;
+  justify-content: center;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  pointer-events: none;
+  z-index: var(--z-sticky);
+}
+
+.capture-fab {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  padding: var(--space-6);
+  gap: var(--space-2);
   background: var(--color-accent);
   color: var(--color-bg-deep);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: var(--font-bold);
   border: none;
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-full);
   cursor: pointer;
+  pointer-events: auto;
   box-shadow:
     0 0 60px var(--color-accent-glow),
     0 0 30px var(--color-accent-glow),
     var(--shadow-lg);
   transition: all var(--duration-normal) var(--ease-out);
-  z-index: var(--z-sticky);
+  animation: capture-glow 3s ease-in-out infinite;
+}
+
+@keyframes capture-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 40px var(--color-accent-glow),
+      0 0 20px var(--color-accent-glow),
+      var(--shadow-lg);
+  }
+  50% {
+    box-shadow:
+      0 0 80px var(--color-accent-glow),
+      0 0 40px var(--color-accent-glow),
+      0 0 10px var(--color-accent),
+      var(--shadow-lg);
+  }
 }
 
 .capture-fab:hover {
   background: var(--color-accent-hover);
-  transform: translateY(-3px) scale(1.02);
+  animation: none;
   box-shadow:
     0 0 80px var(--color-accent-glow),
     0 0 40px var(--color-accent-glow),
@@ -309,12 +336,17 @@
 }
 
 .capture-fab:active {
-  transform: translateY(0) scale(0.98);
+  transform: scale(0.95);
 }
 
 .capture-fab-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+}
+
+.capture-fab-text {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
 }
 
 /* ============================================
@@ -516,6 +548,62 @@
   font-weight: var(--font-semibold);
   font-variant-numeric: tabular-nums;
   color: var(--color-accent);
+}
+
+/* Voice action buttons (Continue / Save) */
+.voice-actions {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 280px;
+}
+
+.voice-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.voice-action-btn.primary {
+  background: var(--color-accent);
+  color: var(--color-bg-deep);
+}
+
+.voice-action-btn.primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.voice-action-btn.secondary {
+  background: var(--color-bg-elevated);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
+}
+
+.voice-action-btn.secondary:hover {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+/* Voice transcript preview */
+.voice-transcript {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-height: 120px;
+  overflow: auto;
+  width: 100%;
 }
 
 /* Text Input */
@@ -740,22 +828,32 @@
   font-style: italic;
 }
 
-/* Analysis Sections - Compact */
-.analysis-sections {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.analysis-card {
-  padding: var(--space-3) var(--space-4);
+/* Analysis Document - Unified presentation */
+.analysis-document {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
+  padding: var(--space-4);
 }
 
-.analysis-card-label {
-  font-size: 10px;
+.analysis-section {
+  padding: var(--space-3) 0;
+}
+
+.analysis-section:first-child {
+  padding-top: 0;
+}
+
+.analysis-section:last-child {
+  padding-bottom: 0;
+}
+
+.analysis-section:not(:last-child) {
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.analysis-section-label {
+  font-size: 11px;
   font-weight: var(--font-semibold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);
@@ -763,22 +861,22 @@
   margin-bottom: var(--space-2);
 }
 
-.analysis-card-content {
+.analysis-section-content {
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
   color: var(--color-text-primary);
 }
 
-.analysis-card-content ul {
+.analysis-section-content ul {
   margin-top: var(--space-1);
   padding-left: var(--space-4);
 }
 
-.analysis-card-content li {
+.analysis-section-content li {
   margin-bottom: var(--space-1);
 }
 
-.analysis-card-content li::marker {
+.analysis-section-content li::marker {
   color: var(--color-accent);
 }
 

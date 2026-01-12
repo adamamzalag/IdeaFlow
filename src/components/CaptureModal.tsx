@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { X, Mic, Type, Square, Send } from 'lucide-react'
+import { X, Mic, Type, Square, Send, Play } from 'lucide-react'
 
 interface CaptureModalProps {
   onClose: () => void
@@ -57,8 +57,14 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const timerRef = useRef<number | null>(null)
   const silenceTimerRef = useRef<number | null>(null)
+  const voiceStateRef = useRef<VoiceState>('idle') // Track current state for callbacks
 
-  // Initialize speech recognition
+  // Keep ref in sync with state
+  useEffect(() => {
+    voiceStateRef.current = voiceState
+  }, [voiceState])
+
+  // Initialize speech recognition (once on mount)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,22 +100,37 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             clearTimeout(silenceTimerRef.current)
           }
           silenceTimerRef.current = window.setTimeout(() => {
-            stopRecording()
-          }, 2000) // Stop after 2 seconds of silence
+            // Use the ref to get current state
+            if (voiceStateRef.current === 'recording') {
+              setVoiceState('stopped')
+              setInterimTranscript('')
+              if (recognitionRef.current) {
+                recognitionRef.current.stop()
+              }
+              if (timerRef.current) {
+                clearInterval(timerRef.current)
+                timerRef.current = null
+              }
+            }
+          }, 3000) // Stop after 3 seconds of silence
         }
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           console.error('Speech recognition error:', event.error)
-          stopRecording()
+          // Don't auto-stop on all errors - some are recoverable
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            setVoiceState('idle')
+            alert('Microphone access denied. Please allow microphone access and try again.')
+          }
         }
 
         recognition.onend = () => {
-          // Recognition ended - check if we should keep going
-          if (voiceState === 'recording' && recognitionRef.current) {
+          // Recognition ended - check if we should keep going using the ref
+          if (voiceStateRef.current === 'recording' && recognitionRef.current) {
             try {
               recognitionRef.current.start()
             } catch {
-              // Already stopped
+              // Already stopped or error
             }
           }
         }
@@ -120,7 +141,11 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop()
+        try {
+          recognitionRef.current.stop()
+        } catch {
+          // Already stopped
+        }
       }
       if (timerRef.current) {
         clearInterval(timerRef.current)
@@ -129,17 +154,19 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         clearTimeout(silenceTimerRef.current)
       }
     }
-  }, [voiceState])
+  }, []) // Empty deps - initialize once
 
-  const startRecording = () => {
+  const startRecording = (keepTranscript = false) => {
     if (!recognitionRef.current) {
       alert('Speech recognition is not supported in this browser. Try Safari on iOS or Chrome on desktop.')
       return
     }
 
-    setFinalTranscript('')
+    if (!keepTranscript) {
+      setFinalTranscript('')
+      setDuration(0)
+    }
     setInterimTranscript('')
-    setDuration(0)
     setVoiceState('recording')
 
     try {
@@ -172,12 +199,20 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
     }
   }
 
-  const handleVoiceCapture = () => {
+  const continueRecording = () => {
+    startRecording(true) // Keep existing transcript
+  }
+
+  const handleMainButtonClick = () => {
     if (voiceState === 'idle') {
       startRecording()
     } else if (voiceState === 'recording') {
       stopRecording()
-    } else if (voiceState === 'stopped' && finalTranscript.trim()) {
+    }
+  }
+
+  const handleSaveIdea = () => {
+    if (finalTranscript.trim()) {
       onCapture(finalTranscript.trim(), true)
     }
   }
@@ -241,45 +276,55 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         {/* Voice Recording */}
         {mode === 'voice' && (
           <div className="voice-recorder">
-            <motion.button
-              className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''}`}
-              onClick={handleVoiceCapture}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {voiceState === 'recording' ? (
-                <Square size={40} />
-              ) : voiceState === 'stopped' && finalTranscript.trim() ? (
-                <Send size={40} />
-              ) : (
-                <Mic size={40} />
-              )}
-            </motion.button>
+            {/* Main record/stop button - only show when not stopped with transcript */}
+            {!(voiceState === 'stopped' && finalTranscript.trim()) && (
+              <motion.button
+                className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''}`}
+                onClick={handleMainButtonClick}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {voiceState === 'recording' ? (
+                  <Square size={40} />
+                ) : (
+                  <Mic size={40} />
+                )}
+              </motion.button>
+            )}
 
             {voiceState === 'recording' && (
               <div className="voice-duration">{formatDuration(duration)}</div>
             )}
 
+            {/* Stopped state: show Continue + Save buttons */}
+            {voiceState === 'stopped' && finalTranscript.trim() && (
+              <motion.div
+                className="voice-actions"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <button className="voice-action-btn secondary" onClick={continueRecording}>
+                  <Play size={20} />
+                  Continue
+                </button>
+                <button className="voice-action-btn primary" onClick={handleSaveIdea}>
+                  <Send size={20} />
+                  Save Idea
+                </button>
+              </motion.div>
+            )}
+
             <p className="voice-hint">
               {voiceState === 'idle' && 'Tap to start recording'}
               {voiceState === 'recording' && 'Tap to stop, or pause speaking'}
-              {voiceState === 'stopped' && finalTranscript.trim() && 'Tap to save your idea'}
+              {voiceState === 'stopped' && finalTranscript.trim() && 'Continue recording or save your idea'}
             </p>
 
             {displayTranscript && (
               <motion.div
+                className="voice-transcript"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                style={{
-                  marginTop: 'var(--space-4)',
-                  padding: 'var(--space-4)',
-                  background: 'var(--color-bg-elevated)',
-                  borderRadius: 'var(--radius-lg)',
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--color-text-secondary)',
-                  maxHeight: '120px',
-                  overflow: 'auto'
-                }}
               >
                 <span>"{finalTranscript}</span>
                 {interimTranscript && (

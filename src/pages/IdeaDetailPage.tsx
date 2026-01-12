@@ -225,49 +225,49 @@ function AnalysisView({ idea, showTranscript, onToggleTranscript }: AnalysisView
         </AnimatePresence>
       </div>
 
-      {/* Analysis Sections */}
+      {/* Analysis - Single unified document */}
       {idea.analysis && (
-        <div className="analysis-sections">
-          <AnalysisCard label="Summary">
+        <div className="analysis-document">
+          <AnalysisSection label="Summary">
             {idea.analysis.summary}
-          </AnalysisCard>
+          </AnalysisSection>
 
-          <AnalysisCard label="Problem it Solves">
+          <AnalysisSection label="Problem it Solves">
             {idea.analysis.problemItSolves}
-          </AnalysisCard>
+          </AnalysisSection>
 
-          <AnalysisCard label="How it Would Work">
+          <AnalysisSection label="How it Would Work">
             {idea.analysis.howItWouldWork}
-          </AnalysisCard>
+          </AnalysisSection>
 
-          <AnalysisCard label="Effort Estimate">
+          <AnalysisSection label="Effort Estimate">
             {idea.analysis.effortEstimate}
-          </AnalysisCard>
+          </AnalysisSection>
 
-          <AnalysisCard label="Potential Value">
+          <AnalysisSection label="Potential Value">
             {idea.analysis.potentialValue}
-          </AnalysisCard>
+          </AnalysisSection>
 
-          <AnalysisCard label="Challenges">
+          <AnalysisSection label="Challenges">
             {idea.analysis.challenges}
-          </AnalysisCard>
+          </AnalysisSection>
 
-          <AnalysisCard label="How to Accomplish">
+          <AnalysisSection label="How to Accomplish">
             {idea.analysis.howToAccomplish}
-          </AnalysisCard>
+          </AnalysisSection>
 
-          <AnalysisCard label="Next Steps">
+          <AnalysisSection label="Next Steps">
             {idea.analysis.nextSteps}
-          </AnalysisCard>
+          </AnalysisSection>
 
           {idea.analysis.questionsForYou.length > 0 && (
-            <AnalysisCard label="Questions for You">
+            <AnalysisSection label="Questions for You">
               <ul>
                 {idea.analysis.questionsForYou.map((q, i) => (
                   <li key={i}>{q}</li>
                 ))}
               </ul>
-            </AnalysisCard>
+            </AnalysisSection>
           )}
         </div>
       )}
@@ -275,16 +275,16 @@ function AnalysisView({ idea, showTranscript, onToggleTranscript }: AnalysisView
   )
 }
 
-interface AnalysisCardProps {
+interface AnalysisSectionProps {
   label: string
   children: React.ReactNode
 }
 
-function AnalysisCard({ label, children }: AnalysisCardProps) {
+function AnalysisSection({ label, children }: AnalysisSectionProps) {
   return (
-    <div className="analysis-card">
-      <div className="analysis-card-label">{label}</div>
-      <div className="analysis-card-content">{children}</div>
+    <div className="analysis-section">
+      <h3 className="analysis-section-label">{label}</h3>
+      <div className="analysis-section-content">{children}</div>
     </div>
   )
 }

@@ -7,56 +7,65 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 **GitHub:** https://github.com/adamamzalag/IdeaFlow
 **Design Doc:** `/docs/plans/2026-01-10-ideaflow-design.md`
 
-## What We Did This Session
+## Current State (January 12, 2026)
 
-### 1. Brainstormed and Designed the App
-- Full brainstorming session to define the concept
-- Created comprehensive design document
-- Established V1 scope and deferred features
-- Set up project structure and documentation
+### What's Built
+- **Home Page:** Ideas list with tabs (Active/Pursuing/Deferred), compact card design
+- **Capture Modal:** Voice (Web Speech API) and text input with Continue Recording feature
+- **Idea Detail Page:** Tabbed layout (Analysis | Chat), unified analysis document view
+- **Capture Button:** Large 140px circle, centered, glowing animation
 
-### 2. Built Frontend Design (Warm Minimal Aesthetic)
-- Deep charcoal (#0D0D0F) base with warm coral (#E8785A) accent
-- Instrument Sans for UI, Newsreader (serif) for display
-- Spring-based animations with Framer Motion
-- Mobile-first PWA structure
+### What Was Fixed This Session
+1. **Voice Recording** - Fixed closure bug causing inconsistent recording; added Continue Recording option
+2. **Capture Button** - Made it a centered circle with visible glow animation; fixed centering to respect app max-width
+3. **Analysis View** - Consolidated from separate cards into one unified document with section dividers
 
-### 3. Implemented Core Screens
-- **Home Page:** Ideas list with tabs (Active/Pursuing/Deferred)
-- **Capture Modal:** Voice (Web Speech API) and text input
-- **Idea Detail:** Analysis view + chat interface
-
-### 4. Fixed Issues Based on User Feedback
-
-**Issue 1: Home Screen**
-- Cards were too large, taking up too much space
-- Capture button wasn't prominent enough
-- **Fix:** Compact single-row cards, much larger glowing capture button
-
-**Issue 2: Idea Detail Page**
-- Analysis cards took up entire screen before reaching chat
-- Chat was buried below the fold, hard to use while viewing analysis
-- **Fix:** Tabbed layout (Analysis | Chat), each gets full screen
-
-**Issue 3: Voice Recording Bug**
-- Transcript was duplicating everything ("thisthis isthis is a test...")
-- **Fix:** Separated final vs interim results, only append finals
-
-## Current State
-
-- Dev server: `npm run dev` (runs on http://localhost:5173)
-- Build passes: `npm run build` ✓
+### Build Status
+- `npm run build` passes
 - TypeScript: No errors
-- All changes committed and pushed to GitHub
+- Dev server: `npm run dev` runs on http://localhost:5173
 
-## What Needs Testing
+---
 
-Adam was about to test the new changes and provide feedback. He mentioned having adjustments but ran out of context.
+## Next Session: Rich Markdown Rendering (V1)
 
-**Test the following:**
-1. **Home Screen:** Are cards compact enough? Is capture button prominent?
-2. **Idea Detail:** Does tabbed layout work? Can you easily switch between Analysis and Chat?
-3. **Voice Recording:** Does it capture correctly without duplication?
+### Goal
+Replace the current rigid analysis sections with rich markdown rendering so the AI can output formatted content naturally.
+
+### What This Means for V1
+- **Headers** (h1, h2, h3) for structure
+- **Lists** (bullet and numbered)
+- **Bold/italic** for emphasis
+- **Code blocks** for technical content
+- **Blockquotes** for callouts
+- **Tables** if needed
+- **Links** that are clickable
+
+### Implementation Approach
+1. Install a markdown renderer (e.g., `react-markdown` or `marked`)
+2. Update the AI prompt to return markdown instead of structured JSON fields
+3. Update `AnalysisView` component to render markdown instead of labeled sections
+4. Style the markdown output to match the app's design system
+
+### Files to Modify
+- `src/pages/IdeaDetailPage.tsx` - AnalysisView component
+- `src/styles/app.css` - Markdown rendering styles
+- `src/lib/types.ts` - May need to update Idea.analysis type
+- `src/lib/mock-data.ts` - Update mock data to use markdown
+
+---
+
+## V2 Rich Analysis (Future)
+
+Full ChatGPT-style experience documented in `/docs/FUTURE_FEATURES.md`:
+- Image generation (DALL-E/Midjourney API)
+- Charts & visualizations (Chart.js/Recharts)
+- File generation (PDF export, project briefs)
+- Interactive elements (collapsible sections, action items)
+- Embedded media (YouTube, link previews)
+- Narrative flow (AI writes naturally, not rigid sections)
+
+---
 
 ## Tech Stack
 
@@ -66,22 +75,16 @@ Adam was about to test the new changes and provide feedback. He mentioned having
 - Web Speech API (voice recording)
 - Will deploy to Replit (not set up yet)
 
-## Dev Workflow
-
-1. Claude Code does all development
-2. Push to GitHub
-3. Import to Replit for hosting (future step)
-
-## Files to Know
+## Key Files
 
 ```
 src/
 ├── App.tsx                    # Main app with routing
 ├── pages/
-│   ├── HomePage.tsx           # Ideas list + tabs
+│   ├── HomePage.tsx           # Ideas list + capture button
 │   └── IdeaDetailPage.tsx     # Tabbed analysis/chat view
 ├── components/
-│   └── CaptureModal.tsx       # Voice/text capture
+│   └── CaptureModal.tsx       # Voice/text capture with Continue Recording
 ├── styles/
 │   ├── design-system.css      # Colors, typography, spacing
 │   └── app.css                # Component styles
@@ -90,13 +93,12 @@ src/
     └── mock-data.ts           # Sample ideas for testing
 ```
 
-## Next Steps
+## Documentation
 
-1. Get Adam's feedback on current UI
-2. Make any additional UI adjustments
-3. Create implementation plan for backend
-4. Build out actual functionality (API, database, AI agent)
+- `/docs/FUTURE_FEATURES.md` - V2+ roadmap including Rich Analysis Output
+- `/docs/STYLE_GUIDE.md` - Design system reference
+- `/docs/specs/v1-complete-spec.md` - Full V1 specification
 
 ---
 
-*Session Date: January 11, 2026*
+*Session Date: January 12, 2026*

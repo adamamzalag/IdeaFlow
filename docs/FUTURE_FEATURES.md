@@ -35,6 +35,21 @@ Features deferred from V1, documented for future implementation.
 
 ## Tier 2: Medium-Term (V2)
 
+### Rich Analysis Output (ChatGPT-style)
+**Value:** Analysis feels like a full AI conversation, not just text sections
+**Implementation:** Comprehensive rendering system for AI-generated content
+
+**Capabilities:**
+- **Rich markdown rendering** - Headers, lists, code blocks, tables, bold/italic, blockquotes
+- **Image generation** - AI-generated mockups, diagrams, concept art (DALL-E/Midjourney API)
+- **Charts & visualizations** - Data charts, comparison matrices, timelines (Chart.js/Recharts)
+- **File generation** - Export analysis as PDF, create project briefs, generate task lists
+- **Interactive elements** - Collapsible sections, clickable action items, expandable details
+- **Embedded media** - YouTube videos, links with previews, reference images
+- **Narrative flow** - AI writes in a natural document style, not rigid sections
+
+**Notes:** This transforms the analysis from a form-like display into a rich, explorable document that feels like getting advice from a knowledgeable collaborator.
+
 ### Self-Improving Analysis Patterns
 **Value:** AI learns what analysis types you find useful
 **Implementation:** Store user feedback, adjust analysis prompts

@@ -27,7 +27,7 @@
   --color-accent-soft: #E8785A20;
   --color-accent-medium: #E8785A40;
   --color-accent-hover: #ED8F76;
-  --color-accent-glow: #E8785A30;
+  --color-accent-glow: #E8785A80; /* More visible glow */
 
   /* Semantic colors */
   --color-success: #5FB87A;

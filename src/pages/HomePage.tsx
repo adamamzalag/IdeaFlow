@@ -94,15 +94,16 @@ export function HomePage({
         )}
       </main>
 
-      <motion.button
-        className="capture-fab"
-        onClick={onOpenCapture}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <Sparkles className="capture-fab-icon" />
-        Capture Idea
-      </motion.button>
+      <div className="capture-fab-container">
+        <motion.button
+          className="capture-fab"
+          onClick={onOpenCapture}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Sparkles className="capture-fab-icon" />
+          <span className="capture-fab-text">Capture Idea</span>
+        </motion.button>
+      </div>
     </>
   )
 }
