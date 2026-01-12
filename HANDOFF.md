@@ -1,104 +1,125 @@
-# IdeaFlow Session Handoff
+# IdeaFlow Status & Roadmap
 
-## What This Project Is
-
-IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assistance. Users voice-record ideas in seconds, an AI agent fleshes them out in the background, and users return later to review, discuss, and decide whether to pursue or defer.
-
-**GitHub:** https://github.com/adamamzalag/IdeaFlow
-**Design Doc:** `/docs/plans/2026-01-10-ideaflow-design.md`
-
-## Current State (January 12, 2026)
-
-### What's Built
-- **Home Page:** Ideas list with tabs (Active/Pursuing/Deferred), compact card design
-- **Capture Modal:** Voice (Web Speech API) and text input with Continue Recording feature
-- **Idea Detail Page:** Tabbed layout (Analysis | Chat), unified analysis document view
-- **Capture Button:** Large 140px circle, centered, glowing animation
-
-### What Was Fixed This Session
-1. **Voice Recording** - Fixed closure bug causing inconsistent recording; added Continue Recording option
-2. **Capture Button** - Made it a centered circle with visible glow animation; fixed centering to respect app max-width
-3. **Analysis View** - Consolidated from separate cards into one unified document with section dividers
-
-### Build Status
-- `npm run build` passes
-- TypeScript: No errors
-- Dev server: `npm run dev` runs on http://localhost:5173
+**Last Updated:** January 12, 2026
 
 ---
 
-## Next Session: Rich Markdown Rendering (V1)
+## Current State: Frontend Prototype Complete
 
-### Goal
-Replace the current rigid analysis sections with rich markdown rendering so the AI can output formatted content naturally.
+The app has a complete, beautiful frontend with mock data. No backend yet.
 
-### What This Means for V1
-- **Headers** (h1, h2, h3) for structure
-- **Lists** (bullet and numbered)
-- **Bold/italic** for emphasis
-- **Code blocks** for technical content
-- **Blockquotes** for callouts
-- **Tables** if needed
-- **Links** that are clickable
+### What's Built (Frontend)
 
-### Implementation Approach
-1. Install a markdown renderer (e.g., `react-markdown` or `marked`)
-2. Update the AI prompt to return markdown instead of structured JSON fields
-3. Update `AnalysisView` component to render markdown instead of labeled sections
-4. Style the markdown output to match the app's design system
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Home page with idea list | Done | Active/Pursuing/Deferred tabs |
+| Capture modal | Done | Voice + text input |
+| Voice recording | Done | Web Speech API, continue recording feature |
+| Idea detail page | Done | Tabbed Analysis/Chat layout |
+| Markdown analysis rendering | Done | Tables, lists, blockquotes, headers |
+| Chat UI | Done | Messages render, input works |
+| Pursue/Defer actions | Done | UI only, state updates |
+| Dark theme | Done | Ice blue accent |
+| Mobile-first design | Done | Responsive, large touch targets |
+| Animations | Done | Framer Motion throughout |
 
-### Files to Modify
-- `src/pages/IdeaDetailPage.tsx` - AnalysisView component
-- `src/styles/app.css` - Markdown rendering styles
-- `src/lib/types.ts` - May need to update Idea.analysis type
-- `src/lib/mock-data.ts` - Update mock data to use markdown
+### What's NOT Built Yet
+
+| Feature | Priority | Notes |
+|---------|----------|-------|
+| Backend server | High | Express.js, API routes |
+| Database | High | PostgreSQL for persistence |
+| AI integration | High | Claude API for analysis + chat |
+| Real-time analysis updates | High | Chat insights update analysis |
+| Auth | Medium | Replit Auth (single user for now) |
+| PWA setup | Medium | Manifest, service worker, icons |
+| Replit deployment | Medium | Connect to Replit hosting |
 
 ---
 
-## V2 Rich Analysis (Future)
+## V1 Roadmap
 
-Full ChatGPT-style experience documented in `/docs/FUTURE_FEATURES.md`:
-- Image generation (DALL-E/Midjourney API)
-- Charts & visualizations (Chart.js/Recharts)
-- File generation (PDF export, project briefs)
-- Interactive elements (collapsible sections, action items)
-- Embedded media (YouTube, link previews)
-- Narrative flow (AI writes naturally, not rigid sections)
+### Phase 1: Frontend (COMPLETE)
+- [x] Home page with tabs
+- [x] Capture modal (voice + text)
+- [x] Idea detail with Analysis/Chat tabs
+- [x] Markdown rendering for analysis
+- [x] Dark theme, animations, mobile-first
+
+### Phase 2: Backend Foundation (NEXT)
+- [ ] Set up Express.js server
+- [ ] PostgreSQL database with schema
+- [ ] API routes for CRUD operations
+- [ ] Connect frontend to backend
+- [ ] Data persistence (ideas save to DB)
+
+### Phase 3: AI Integration
+- [ ] Claude API integration
+- [ ] Background analysis generation
+- [ ] Chat with AI (real responses)
+- [ ] Analysis updates from chat
+
+### Phase 4: Polish & Deploy
+- [ ] Replit Auth
+- [ ] PWA setup (installable on phone)
+- [ ] Deploy to Replit
+- [ ] Final testing on mobile
 
 ---
 
 ## Tech Stack
 
-- React + TypeScript + Vite
-- Framer Motion (animations)
-- Lucide React (icons)
-- Web Speech API (voice recording)
-- Will deploy to Replit (not set up yet)
+| Layer | Technology | Status |
+|-------|------------|--------|
+| Frontend | React + Vite + TypeScript | Done |
+| Animations | Framer Motion | Done |
+| Icons | Lucide React | Done |
+| Voice | Web Speech API | Done |
+| Backend | Express.js | Not started |
+| Database | PostgreSQL (Replit) | Not started |
+| AI | Claude API | Not started |
+| Auth | Replit Auth | Not started |
+| Hosting | Replit | Not started |
+
+---
 
 ## Key Files
 
 ```
 src/
-├── App.tsx                    # Main app with routing
+├── App.tsx                    # Main app, routing, state
 ├── pages/
 │   ├── HomePage.tsx           # Ideas list + capture button
-│   └── IdeaDetailPage.tsx     # Tabbed analysis/chat view
+│   └── IdeaDetailPage.tsx     # Analysis + Chat tabs
 ├── components/
-│   └── CaptureModal.tsx       # Voice/text capture with Continue Recording
+│   └── CaptureModal.tsx       # Voice/text capture
 ├── styles/
 │   ├── design-system.css      # Colors, typography, spacing
-│   └── app.css                # Component styles
+│   └── app.css                # Component styles + markdown
 └── lib/
     ├── types.ts               # TypeScript types
-    └── mock-data.ts           # Sample ideas for testing
+    └── mock-data.ts           # Sample ideas (to be replaced by DB)
 ```
-
-## Documentation
-
-- `/docs/FUTURE_FEATURES.md` - V2+ roadmap including Rich Analysis Output
-- `/docs/STYLE_GUIDE.md` - Design system reference
-- `/docs/specs/v1-complete-spec.md` - Full V1 specification
 
 ---
 
-*Session Date: January 12, 2026*
+## Next Session
+
+**Start Phase 2: Backend Foundation**
+
+1. Set up Express.js server structure
+2. Define database schema (users, ideas, conversations)
+3. Create API routes
+4. Connect frontend to real data
+
+---
+
+## Links
+
+- **GitHub:** https://github.com/adamamzalag/IdeaFlow
+- **Design Doc:** `/docs/plans/2026-01-10-ideaflow-design.md`
+- **Future Features:** `/docs/FUTURE_FEATURES.md`
+
+---
+
+*This file is the single source of truth for project status.*

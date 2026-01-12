@@ -13,15 +13,7 @@ export interface Idea {
 
 export interface Analysis {
   version: number
-  summary: string
-  problemItSolves: string
-  howItWouldWork: string
-  effortEstimate: string
-  potentialValue: string
-  challenges: string
-  howToAccomplish: string
-  nextSteps: string
-  questionsForYou: string[]
+  content: string  // Full markdown document - AI controls structure
 }
 
 export interface Message {

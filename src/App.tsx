@@ -47,15 +47,24 @@ export default function App() {
               title: 'New idea being analyzed...',
               analysis: {
                 version: 1,
-                summary: 'This idea is being analyzed by AI...',
-                problemItSolves: 'Analysis in progress...',
-                howItWouldWork: 'Analysis in progress...',
-                effortEstimate: 'Analysis in progress...',
-                potentialValue: 'Analysis in progress...',
-                challenges: 'Analysis in progress...',
-                howToAccomplish: 'Analysis in progress...',
-                nextSteps: 'Analysis in progress...',
-                questionsForYou: []
+                content: `## Summary
+
+Your idea is being analyzed...
+
+## Initial Thoughts
+
+This is a placeholder analysis. In the real app, the AI would process your idea and generate a detailed analysis with:
+
+- **Problem identification** - What problem does this solve?
+- **Implementation approach** - How would this work?
+- **Effort estimate** - How much work is involved?
+- **Value assessment** - What's the potential impact?
+
+## Next Steps
+
+1. Connect to AI backend
+2. Generate real analysis
+3. Enable follow-up chat`
               }
             }
           : idea

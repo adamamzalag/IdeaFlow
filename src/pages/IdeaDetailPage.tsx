@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { Idea, Message } from '../lib/types'
 import { mockMessages } from '../lib/mock-data'
 
@@ -225,67 +227,15 @@ function AnalysisView({ idea, showTranscript, onToggleTranscript }: AnalysisView
         </AnimatePresence>
       </div>
 
-      {/* Analysis - Single unified document */}
+      {/* Analysis - Markdown document */}
       {idea.analysis && (
-        <div className="analysis-document">
-          <AnalysisSection label="Summary">
-            {idea.analysis.summary}
-          </AnalysisSection>
-
-          <AnalysisSection label="Problem it Solves">
-            {idea.analysis.problemItSolves}
-          </AnalysisSection>
-
-          <AnalysisSection label="How it Would Work">
-            {idea.analysis.howItWouldWork}
-          </AnalysisSection>
-
-          <AnalysisSection label="Effort Estimate">
-            {idea.analysis.effortEstimate}
-          </AnalysisSection>
-
-          <AnalysisSection label="Potential Value">
-            {idea.analysis.potentialValue}
-          </AnalysisSection>
-
-          <AnalysisSection label="Challenges">
-            {idea.analysis.challenges}
-          </AnalysisSection>
-
-          <AnalysisSection label="How to Accomplish">
-            {idea.analysis.howToAccomplish}
-          </AnalysisSection>
-
-          <AnalysisSection label="Next Steps">
-            {idea.analysis.nextSteps}
-          </AnalysisSection>
-
-          {idea.analysis.questionsForYou.length > 0 && (
-            <AnalysisSection label="Questions for You">
-              <ul>
-                {idea.analysis.questionsForYou.map((q, i) => (
-                  <li key={i}>{q}</li>
-                ))}
-              </ul>
-            </AnalysisSection>
-          )}
+        <div className="analysis-document markdown-content">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {idea.analysis.content}
+          </ReactMarkdown>
         </div>
       )}
     </>
-  )
-}
-
-interface AnalysisSectionProps {
-  label: string
-  children: React.ReactNode
-}
-
-function AnalysisSection({ label, children }: AnalysisSectionProps) {
-  return (
-    <div className="analysis-section">
-      <h3 className="analysis-section-label">{label}</h3>
-      <div className="analysis-section-content">{children}</div>
-    </div>
   )
 }
 

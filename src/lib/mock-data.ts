@@ -10,18 +10,48 @@ export const mockIdeas: Idea[] = [
     updatedAt: new Date('2026-01-10T08:35:00'),
     analysis: {
       version: 1,
-      summary: 'Use AI to predict stock levels and automate reorder recommendations for the e-commerce business.',
-      problemItSolves: 'Currently you manually track inventory across FBA, Shopify, and suppliers. This creates work and risks stockouts or overstock situations.',
-      howItWouldWork: 'Pull sales data from all channels, analyze velocity trends, factor in supplier lead times (typically 4-6 weeks from China), and surface recommendations in a dashboard or automated alerts.',
-      effortEstimate: 'Medium effort. Would need API integrations with Amazon SP-API, Shopify, and your supplier data. Core ML model could use existing forecasting libraries. 2-3 weeks of focused development.',
-      potentialValue: 'High. Reduces stockout risk (lost sales), prevents overstock (tied-up capital), and saves 3-5 hours/week of manual inventory review.',
-      challenges: 'Accuracy depends on data quality. New product launches won\'t have historical data. Supplier reliability varies and is hard to model.',
-      howToAccomplish: 'Start with your top 20 SKUs by revenue. Build a simple model using moving averages, then iterate. Could integrate with existing WCAmz project.',
-      nextSteps: 'Audit current data sources. Define what "success" looks like (e.g., reduce stockouts by 50%). Start with a prototype for top SKUs.',
-      questionsForYou: [
-        'How accurate are your current supplier lead time estimates?',
-        'Do you want this integrated into WCAmz or as a standalone tool?'
-      ]
+      content: `## Summary
+
+Use AI to predict stock levels and automate reorder recommendations for the e-commerce business.
+
+## The Problem
+
+Currently you manually track inventory across FBA, Shopify, and suppliers. This creates work and risks stockouts or overstock situations.
+
+## How It Would Work
+
+1. Pull sales data from all channels
+2. Analyze velocity trends and seasonality patterns
+3. Factor in supplier lead times (typically 4-6 weeks from China)
+4. Surface recommendations in a dashboard or automated alerts
+
+## Assessment
+
+| Factor | Rating | Notes |
+|--------|--------|-------|
+| Effort | Medium | 2-3 weeks of focused development |
+| Value | High | Saves 3-5 hrs/week, reduces stockouts |
+| Risk | Low | Can start small with top SKUs |
+
+## Challenges
+
+- **Data quality** - Accuracy depends on having clean historical data
+- **New products** - Won't have history for launches
+- **Supplier variability** - Lead times aren't always consistent
+
+## Recommended Approach
+
+Start with your **top 20 SKUs by revenue**. Build a simple model using moving averages, then iterate. Could integrate with existing WCAmz project since you already have the Amazon data there.
+
+## Next Steps
+
+1. Audit current data sources
+2. Define success criteria (e.g., reduce stockouts by 50%)
+3. Build prototype for top SKUs
+
+> **Questions for you:**
+> - How accurate are your current supplier lead time estimates?
+> - Do you want this integrated into WCAmz or as a standalone tool?`
     }
   },
   {
@@ -41,18 +71,48 @@ export const mockIdeas: Idea[] = [
     updatedAt: new Date('2026-01-09T14:28:00'),
     analysis: {
       version: 1,
-      summary: 'Async standup collection with AI-powered summaries and blocker detection.',
-      problemItSolves: 'Daily standups take 15 minutes and require everyone to be available at the same time. Information gets lost. Blockers don\'t surface fast enough.',
-      howItWouldWork: 'Bot prompts team members at their preferred time. They respond with what they did, what they\'re doing, and blockers. AI summarizes, detects patterns, and surfaces blockers immediately.',
-      effortEstimate: 'Medium-low. Teams/Slack bots are well-documented. AI summarization is straightforward. 1-2 weeks for MVP.',
-      potentialValue: 'Saves ~5 hours/week of team meeting time. Better async work. Faster blocker resolution.',
-      challenges: 'Team adoption - some people prefer live interaction. May miss nuance that comes from real-time conversation.',
-      howToAccomplish: 'Start with Microsoft Teams since that\'s your primary tool. Use Power Automate or a custom bot. Claude API for summarization.',
-      nextSteps: 'Survey team on standup preferences. Define the 3 questions to ask. Build prototype for one team first.',
-      questionsForYou: [
-        'How many people would use this?',
-        'Is the goal to eliminate standups or supplement them?'
-      ]
+      content: `## Summary
+
+Async standup collection with AI-powered summaries and blocker detection.
+
+## The Problem
+
+Daily standups take 15 minutes and require everyone to be available at the same time. Information gets lost. Blockers don't surface fast enough.
+
+## How It Would Work
+
+Bot prompts team members at their preferred time. They respond with:
+- What they did yesterday
+- What they're doing today
+- Any blockers
+
+AI summarizes everything, detects patterns, and surfaces blockers immediately to the right people.
+
+## Quick Assessment
+
+**Effort:** Medium-low (1-2 weeks for MVP)
+**Value:** Saves ~5 hours/week of meeting time
+**Risk:** Team adoption - some prefer live interaction
+
+## Challenges
+
+- Some people prefer live interaction and may resist
+- May miss nuance that comes from real-time conversation
+- Need buy-in from the whole team to be effective
+
+## Recommended Approach
+
+Start with **Microsoft Teams** since that's your primary tool. Use Power Automate or a custom bot. Claude API for summarization.
+
+## Next Steps
+
+1. Survey team on standup preferences
+2. Define the 3 questions to ask
+3. Build prototype for one team first
+
+> **Questions for you:**
+> - How many people would use this?
+> - Is the goal to eliminate standups or supplement them?`
     }
   },
   {
@@ -64,18 +124,46 @@ export const mockIdeas: Idea[] = [
     updatedAt: new Date('2026-01-09T11:00:00'),
     analysis: {
       version: 2,
-      summary: 'Monitor Amazon review sentiment trends with automated alerts and response suggestions.',
-      problemItSolves: 'Reviews are scattered across products and marketplaces. Negative sentiment issues take time to surface. Responding is manual and slow.',
-      howItWouldWork: 'Aggregate reviews via Amazon SP-API. Run sentiment analysis to score and categorize. Dashboard shows trends. Alerts trigger on negative spikes. AI drafts response templates.',
-      effortEstimate: 'Medium. Review data is accessible via API. Sentiment analysis can use existing models. 2 weeks for core functionality.',
-      potentialValue: 'Protect product ratings (critical for Amazon sales). Faster response improves customer perception. Early detection of product issues.',
-      challenges: 'Amazon API rate limits. Response automation needs careful review - bad responses hurt more than no response.',
-      howToAccomplish: 'Integrate with WCAmz since you already have Amazon API connection. Add sentiment layer. Start with alerting, then add response generation.',
-      nextSteps: 'Define sentiment thresholds for alerts. Identify top 10 products to monitor first. Set up basic alerting.',
-      questionsForYou: [
-        'What response time are you targeting?',
-        'Should this cover all marketplaces or start with US?'
-      ]
+      content: `## Summary
+
+Monitor Amazon review sentiment trends with automated alerts and response suggestions.
+
+## The Problem
+
+Reviews are scattered across products and marketplaces. Negative sentiment issues take time to surface. Responding is manual and slow.
+
+## How It Would Work
+
+1. Aggregate reviews via Amazon SP-API
+2. Run sentiment analysis to score and categorize
+3. Dashboard shows trends over time
+4. Alerts trigger on negative spikes
+5. AI drafts response templates
+
+## Why This Matters
+
+- **Protect ratings** - Critical for Amazon sales algorithm
+- **Faster response** - Improves customer perception
+- **Early warning** - Catch product issues before they escalate
+
+## Challenges
+
+- **API rate limits** - Amazon restricts how often you can pull data
+- **Response quality** - Bad auto-responses hurt more than no response
+
+## Recommended Approach
+
+Integrate with **WCAmz** since you already have the Amazon API connection. Add a sentiment analysis layer. Start with alerting, then add response generation once that's solid.
+
+## Next Steps
+
+1. Define sentiment thresholds for alerts
+2. Identify top 10 products to monitor first
+3. Set up basic alerting
+
+> **Questions for you:**
+> - What response time are you targeting?
+> - Should this cover all marketplaces or start with US?`
     }
   },
   {
@@ -87,18 +175,46 @@ export const mockIdeas: Idea[] = [
     updatedAt: new Date('2026-01-06T10:00:00'),
     analysis: {
       version: 1,
-      summary: 'Pre-built email templates for common supplier communications.',
-      problemItSolves: 'Writing supplier emails is repetitive. Tone and format vary. New team members don\'t know what to say.',
-      howItWouldWork: 'Library of templates for: order placement, quality issues, delivery delays, new product inquiries, pricing negotiations. Variables for customization.',
-      effortEstimate: 'Low. This is mostly content work, not technical development. 2-3 hours to create templates.',
-      potentialValue: 'Low-medium. Saves some time but not a major pain point.',
-      challenges: 'Templates can feel impersonal. May not cover edge cases.',
-      howToAccomplish: 'Document your 10 most common supplier email types. Create templates in Notion or Google Docs. Share with team.',
-      nextSteps: 'List the email types you send most often. Draft one template as example.',
-      questionsForYou: [
-        'Is email the primary channel or do you use WeChat/other?',
-        'Who else on the team communicates with suppliers?'
-      ]
+      content: `## Summary
+
+Pre-built email templates for common supplier communications.
+
+## The Problem
+
+Writing supplier emails is repetitive. Tone and format vary between team members. New team members don't know what to say.
+
+## How It Would Work
+
+Library of templates for common scenarios:
+- Order placement
+- Quality issues
+- Delivery delays
+- New product inquiries
+- Pricing negotiations
+
+Each template has variables for easy customization.
+
+## Quick Assessment
+
+**Effort:** Low (2-3 hours of content work)
+**Value:** Low-medium
+**Priority:** Deferred - not a major pain point right now
+
+## Challenges
+
+- Templates can feel impersonal
+- May not cover edge cases
+- Suppliers may respond better to personalized messages
+
+## If You Decide to Pursue
+
+1. Document your 10 most common supplier email types
+2. Create templates in Notion or Google Docs
+3. Share with team
+
+> **Questions for you:**
+> - Is email the primary channel or do you use WeChat/other?
+> - Who else on the team communicates with suppliers?`
     }
   }
 ]
