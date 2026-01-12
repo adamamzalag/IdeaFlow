@@ -61,6 +61,36 @@ The app has a complete frontend deployed to Replit. No backend yet - data doesn'
 
 ---
 
+## Known Bug: Voice Recording Duplication on Android
+
+**Problem:** On Android Chrome, voice recording duplicates words/phrases. Works fine on desktop Chrome.
+
+**Root cause:** The code auto-restarts recognition when Android stops it mid-speech. Android then re-recognizes audio still in its buffer, causing duplication.
+
+**Solution:** Replace current tap-to-start/auto-stop with two recording modes:
+
+### 1. Hold-to-Record (Quick ideas)
+- Press and hold mic button → recording
+- Release → stop recording
+- No auto-restart needed
+- If Android stops early, user sees transcript and can press again
+
+### 2. Pull-to-Lock (Longer recordings, hands-free)
+- Tap mic to start recording
+- Slide/pull up to "lock" into continuous mode
+- Tap again to stop
+- For use cases like recording while driving
+
+**UI/UX needed:**
+- Visual indicator for "locked" state (maybe a lock icon, color change)
+- Pulsing animation while recording
+- Live transcript visible during recording
+- "Continue" button still available if recording stops unexpectedly
+
+**Priority:** Fix before Phase 3 (AI integration) since voice capture is core functionality.
+
+---
+
 ## Deferred Items
 
 **Animation polish** - Do after Phase 2, before launch. The app needs a consistent animation pass (things appearing/disappearing feel jarring in some places). Should audit all interactions and apply consistent patterns.
