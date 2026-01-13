@@ -10,225 +10,121 @@ interface CaptureModalProps {
 type CaptureMode = 'voice' | 'text'
 type VoiceState = 'idle' | 'recording' | 'stopped'
 
-// Web Speech API types
-interface SpeechRecognitionEvent {
-  resultIndex: number
-  results: SpeechRecognitionResultList
-}
-
-interface SpeechRecognitionResultList {
-  length: number
-  [index: number]: SpeechRecognitionResult
-}
-
-interface SpeechRecognitionResult {
-  isFinal: boolean
-  [index: number]: SpeechRecognitionAlternative
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string
-  confidence: number
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string
-}
-
-interface SpeechRecognitionInstance {
-  continuous: boolean
-  interimResults: boolean
-  lang: string
-  onresult: (event: SpeechRecognitionEvent) => void
-  onerror: (event: SpeechRecognitionErrorEvent) => void
-  onend: () => void
-  start: () => void
-  stop: () => void
-}
-
 export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const [mode, setMode] = useState<CaptureMode>('voice')
   const [voiceState, setVoiceState] = useState<VoiceState>('idle')
-  const [finalTranscript, setFinalTranscript] = useState('')
-  const [interimTranscript, setInterimTranscript] = useState('')
+  const [transcript, setTranscript] = useState('')
+  const [isTranscribing, setIsTranscribing] = useState(false)
   const [textInput, setTextInput] = useState('')
   const [duration, setDuration] = useState(0)
-  const [debugLogs, setDebugLogs] = useState<string[]>([])
 
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
   const timerRef = useRef<number | null>(null)
-  const silenceTimerRef = useRef<number | null>(null)
-  const voiceStateRef = useRef<VoiceState>('idle')
-  const baseTranscriptRef = useRef('')
+  const previousTranscriptRef = useRef('')
 
-  // Helper to clear all timers
-  const clearTimers = () => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop()
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setVoiceState('stopped')
+    setIsTranscribing(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'recording.webm')
+
+      const response = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Transcription failed')
+      }
+
+      const data = await response.json()
+      const newTranscript = previousTranscriptRef.current
+        ? previousTranscriptRef.current + ' ' + data.transcript
+        : data.transcript
+      setTranscript(newTranscript)
+      previousTranscriptRef.current = ''
+    } catch (error) {
+      console.error('Transcription error:', error)
+      alert('Failed to transcribe audio. Please try again.')
+      setVoiceState('idle')
+    } finally {
+      setIsTranscribing(false)
+    }
+  }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      })
+
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = async () => {
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop())
+
+        // Create blob and transcribe
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: mediaRecorder.mimeType
+        })
+        await transcribeAudio(audioBlob)
+      }
+
+      mediaRecorderRef.current = mediaRecorder
+      mediaRecorder.start()
+      setVoiceState('recording')
+      setDuration(0)
+
+      // Start duration timer
+      timerRef.current = window.setInterval(() => {
+        setDuration(prev => prev + 1)
+      }, 1000)
+    } catch (error) {
+      console.error('Failed to start recording:', error)
+      alert('Microphone access denied. Please allow microphone access and try again.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop()
+    }
     if (timerRef.current) {
       clearInterval(timerRef.current)
       timerRef.current = null
     }
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current)
-      silenceTimerRef.current = null
-    }
-  }
-
-  // Helper to add debug log
-  const addDebug = (msg: string) => {
-    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false })
-    setDebugLogs(prev => [...prev.slice(-50), `[${timestamp}] ${msg}`])
-  }
-
-  // Keep ref in sync with state
-  useEffect(() => {
-    voiceStateRef.current = voiceState
-  }, [voiceState])
-
-  // Initialize speech recognition (once on mount)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-      if (SpeechRecognitionAPI) {
-        const recognition = new SpeechRecognitionAPI() as SpeechRecognitionInstance
-        recognition.continuous = true
-        recognition.interimResults = true
-        recognition.lang = 'en-US'
-
-        recognition.onresult = (event: SpeechRecognitionEvent) => {
-          // DEBUG: Log raw event data
-          addDebug(`--- onresult fired ---`)
-          addDebug(`resultIndex: ${event.resultIndex}, results.length: ${event.results.length}`)
-
-          let finalText = ''
-          let interimText = ''
-
-          for (let i = 0; i < event.results.length; i++) {
-            const result = event.results[i]
-            const transcriptText = result[0].transcript
-
-            // DEBUG: Log each result
-            addDebug(`  [${i}] "${transcriptText}" isFinal=${result.isFinal}`)
-
-            if (result.isFinal) {
-              finalText += transcriptText + ' '
-            } else {
-              interimText += transcriptText
-            }
-          }
-
-          const newFinalTranscript = baseTranscriptRef.current + finalText
-          addDebug(`→ Setting final: "${newFinalTranscript}"`)
-
-          setFinalTranscript(newFinalTranscript)
-          setInterimTranscript(interimText)
-
-          // Reset silence timer on speech detection
-          if (silenceTimerRef.current) {
-            clearTimeout(silenceTimerRef.current)
-          }
-          silenceTimerRef.current = window.setTimeout(() => {
-            if (voiceStateRef.current === 'recording') {
-              addDebug('Silence timeout - stopping')
-              setVoiceState('stopped')
-              setInterimTranscript('')
-              if (recognitionRef.current) {
-                recognitionRef.current.stop()
-              }
-              if (timerRef.current) {
-                clearInterval(timerRef.current)
-                timerRef.current = null
-              }
-            }
-          }, 3000)
-        }
-
-        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-          addDebug(`ERROR: ${event.error}`)
-          console.error('Speech recognition error:', event.error)
-          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            setVoiceState('idle')
-            alert('Microphone access denied. Please allow microphone access and try again.')
-          }
-        }
-
-        recognition.onend = () => {
-          addDebug('onend fired')
-          if (voiceStateRef.current === 'recording') {
-            addDebug('Was recording, setting to stopped')
-            setVoiceState('stopped')
-            setInterimTranscript('')
-            clearTimers()
-          }
-        }
-
-        recognitionRef.current = recognition
-      }
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop()
-        } catch {
-          // Already stopped
-        }
-      }
-      clearTimers()
-    }
-  }, [])
-
-  const startRecording = (keepTranscript = false) => {
-    if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in this browser.')
-      return
-    }
-
-    addDebug(`startRecording(keepTranscript=${keepTranscript})`)
-
-    if (!keepTranscript) {
-      setFinalTranscript('')
-      baseTranscriptRef.current = ''
-      setDuration(0)
-    } else {
-      baseTranscriptRef.current = finalTranscript
-    }
-    setInterimTranscript('')
-    setVoiceState('recording')
-
-    try {
-      recognitionRef.current.start()
-      addDebug('recognition.start() called')
-    } catch (e) {
-      addDebug(`start() error: ${e}`)
-    }
-
-    timerRef.current = window.setInterval(() => {
-      setDuration(prev => prev + 1)
-    }, 1000)
-  }
-
-  const stopRecording = () => {
-    addDebug('stopRecording() called')
-    setVoiceState('stopped')
-    setInterimTranscript('')
-
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      addDebug('recognition.stop() called')
-    }
-
-    clearTimers()
   }
 
   const continueRecording = () => {
-    addDebug('continueRecording()')
-    startRecording(true)
+    previousTranscriptRef.current = transcript
+    setTranscript('')
+    startRecording()
   }
 
-  // Simple tap handler
   const handleMicClick = () => {
-    addDebug(`handleMicClick - voiceState: ${voiceState}`)
     if (voiceState === 'idle') {
       startRecording()
     } else if (voiceState === 'recording') {
@@ -237,8 +133,8 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   }
 
   const handleSaveIdea = () => {
-    if (finalTranscript.trim()) {
-      onCapture(finalTranscript.trim(), true)
+    if (transcript.trim()) {
+      onCapture(transcript.trim(), true)
     }
   }
 
@@ -253,8 +149,6 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
-
-  const displayTranscript = finalTranscript + interimTranscript
 
   return (
     <motion.div
@@ -300,8 +194,8 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         {/* Voice Recording */}
         {mode === 'voice' && (
           <div className="voice-recorder">
-            {/* Main record/stop button */}
-            {!(voiceState === 'stopped' && finalTranscript.trim()) && (
+            {/* Main record/stop button - hide when transcribing or showing results */}
+            {!isTranscribing && !(voiceState === 'stopped' && transcript.trim()) && (
               <motion.button
                 className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''}`}
                 onClick={handleMicClick}
@@ -320,8 +214,20 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
               <div className="voice-duration">{formatDuration(duration)}</div>
             )}
 
+            {/* Transcribing indicator */}
+            {isTranscribing && (
+              <motion.div
+                className="transcribing-indicator"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div className="spinner" />
+                <span>Transcribing...</span>
+              </motion.div>
+            )}
+
             {/* Stopped state: show Continue + Save buttons */}
-            {voiceState === 'stopped' && finalTranscript.trim() && (
+            {voiceState === 'stopped' && transcript.trim() && !isTranscribing && (
               <motion.div
                 className="voice-actions"
                 initial={{ opacity: 0, y: 10 }}
@@ -339,51 +245,21 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             )}
 
             <p className="voice-hint">
-              {voiceState === 'idle' && 'Tap to start recording'}
+              {voiceState === 'idle' && !isTranscribing && 'Tap to start recording'}
               {voiceState === 'recording' && 'Tap to stop'}
-              {voiceState === 'stopped' && finalTranscript.trim() && 'Continue recording or save your idea'}
+              {isTranscribing && 'Processing your voice...'}
+              {voiceState === 'stopped' && transcript.trim() && !isTranscribing && 'Continue recording or save your idea'}
             </p>
 
-            {displayTranscript && (
+            {/* Transcript display */}
+            {transcript && !isTranscribing && (
               <motion.div
                 className="voice-transcript"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <span>"{finalTranscript}</span>
-                {interimTranscript && (
-                  <span style={{ opacity: 0.5 }}>{interimTranscript}</span>
-                )}
-                <span>"</span>
+                "{transcript}"
               </motion.div>
-            )}
-
-            {/* DEBUG PANEL */}
-            {debugLogs.length > 0 && (
-              <div style={{
-                marginTop: '16px',
-                padding: '8px',
-                background: '#1a1a1a',
-                borderRadius: '8px',
-                fontSize: '10px',
-                fontFamily: 'monospace',
-                maxHeight: '150px',
-                overflow: 'auto',
-                border: '1px solid #333'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ color: '#ff6b6b' }}>DEBUG LOG</span>
-                  <button
-                    onClick={() => setDebugLogs([])}
-                    style={{ background: '#333', border: 'none', color: '#888', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}
-                  >
-                    Clear
-                  </button>
-                </div>
-                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: '#aaa' }}>
-                  {debugLogs.join('\n')}
-                </pre>
-              </div>
             )}
           </div>
         )}
