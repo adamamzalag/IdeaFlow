@@ -540,15 +540,19 @@
 
 .voice-btn.recording {
   background: var(--color-accent);
-  animation: recording-pulse 1.5s ease-in-out infinite;
+  animation: recording-pulse 1.5s var(--ease-out) infinite;
+}
+
+.voice-btn.recording svg {
+  color: var(--color-bg-deep);
 }
 
 @keyframes recording-pulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 var(--color-accent-medium), var(--shadow-glow);
+    box-shadow: 0 0 0 0 var(--color-accent-soft);
   }
   50% {
-    box-shadow: 0 0 0 16px transparent, var(--shadow-glow);
+    box-shadow: 0 0 0 12px transparent;
   }
 }
 
