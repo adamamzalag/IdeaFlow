@@ -58,7 +58,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const timerRef = useRef<number | null>(null)
   const silenceTimerRef = useRef<number | null>(null)
   const voiceStateRef = useRef<VoiceState>('idle') // Track current state for callbacks
-  const confirmedTranscriptRef = useRef('') // Transcript confirmed before restarts
+  const baseTranscriptRef = useRef('') // Transcript at session start (for "Continue" feature)
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -77,23 +77,23 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         recognition.lang = 'en-US'
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
-          let sessionFinal = ''
+          let finalText = ''
           let interimText = ''
 
-          // Rebuild transcript from ALL results in current session (avoids duplication)
+          // Rebuild transcript from ALL results in current session
           for (let i = 0; i < event.results.length; i++) {
             const result = event.results[i]
             const transcriptText = result[0].transcript
 
             if (result.isFinal) {
-              sessionFinal += transcriptText + ' '
+              finalText += transcriptText + ' '
             } else {
               interimText += transcriptText
             }
           }
 
-          // Combine confirmed (from previous sessions) + current session
-          setFinalTranscript(confirmedTranscriptRef.current + sessionFinal)
+          // Combine base transcript (from "Continue") with current session's results
+          setFinalTranscript(baseTranscriptRef.current + finalText)
           setInterimTranscript(interimText)
 
           // Reset silence timer on speech detection
@@ -126,17 +126,17 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         }
 
         recognition.onend = () => {
-          // Recognition ended - check if we should keep going using the ref
-          if (voiceStateRef.current === 'recording' && recognitionRef.current) {
-            // Save current transcript before restarting (results array will reset)
-            setFinalTranscript(prev => {
-              confirmedTranscriptRef.current = prev
-              return prev
-            })
-            try {
-              recognitionRef.current.start()
-            } catch {
-              // Already stopped or error
+          // Recognition ended - just stop, don't auto-restart (fixes Android duplication)
+          if (voiceStateRef.current === 'recording') {
+            setVoiceState('stopped')
+            setInterimTranscript('')
+            if (timerRef.current) {
+              clearInterval(timerRef.current)
+              timerRef.current = null
+            }
+            if (silenceTimerRef.current) {
+              clearTimeout(silenceTimerRef.current)
+              silenceTimerRef.current = null
             }
           }
         }
@@ -170,11 +170,11 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
 
     if (!keepTranscript) {
       setFinalTranscript('')
-      confirmedTranscriptRef.current = '' // Clear accumulated transcript
+      baseTranscriptRef.current = '' // Fresh start
       setDuration(0)
     } else {
-      // Keep existing transcript as the confirmed base
-      confirmedTranscriptRef.current = finalTranscript
+      // "Continue" - preserve existing transcript as base for this session
+      baseTranscriptRef.current = finalTranscript
     }
     setInterimTranscript('')
     setVoiceState('recording')
