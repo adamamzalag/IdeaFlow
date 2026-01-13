@@ -66,6 +66,18 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const dragStartYRef = useRef<number>(0) // Track Y position for pull-to-lock gesture
   const wasHoldingRef = useRef(false) // Track if we were holding to prevent click conflict
 
+  // Helper to clear all timers
+  const clearTimers = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
+  }
+
   // Motion values for lock indicator animation
   const dragDistance = useMotionValue(0)
   const lockIconOpacity = useTransform(dragDistance, [0, LOCK_THRESHOLD], [0, 1])
@@ -141,14 +153,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
           if (voiceStateRef.current === 'recording') {
             setVoiceState('stopped')
             setInterimTranscript('')
-            if (timerRef.current) {
-              clearInterval(timerRef.current)
-              timerRef.current = null
-            }
-            if (silenceTimerRef.current) {
-              clearTimeout(silenceTimerRef.current)
-              silenceTimerRef.current = null
-            }
+            clearTimers()
           }
         }
 
@@ -210,15 +215,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
       recognitionRef.current.stop()
     }
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current)
-      silenceTimerRef.current = null
-    }
+    clearTimers()
   }
 
   const continueRecording = () => {
