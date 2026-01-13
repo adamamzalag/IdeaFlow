@@ -6,7 +6,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Voice recording duplication on Android** - Removed auto-restart logic that caused word duplication when Android Chrome stopped recognition mid-speech
+
 ### Added
+- **Hold-to-record interaction** - Press and hold mic button to record, release to stop
+- **Pull-to-lock gesture** - Drag upward while holding to lock recording for hands-free mode
+- Lock indicator UI with smooth Framer Motion animations
+- Recording pulse animation on mic button
 - Initial project structure
 - Design document (`docs/plans/2026-01-10-ideaflow-design.md`)
 - Project documentation:
