@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { X, Mic, Type, Square, Send, Play } from 'lucide-react'
+import { motion, useMotionValue, useTransform } from 'framer-motion'
+import { X, Mic, Type, Square, Send, Play, Lock } from 'lucide-react'
 
 interface CaptureModalProps {
   onClose: () => void
@@ -65,6 +65,11 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const baseTranscriptRef = useRef('') // Transcript at session start (for "Continue" feature)
   const dragStartYRef = useRef<number>(0) // Track Y position for pull-to-lock gesture
   const wasHoldingRef = useRef(false) // Track if we were holding to prevent click conflict
+
+  // Motion values for lock indicator animation
+  const dragDistance = useMotionValue(0)
+  const lockIconOpacity = useTransform(dragDistance, [0, LOCK_THRESHOLD], [0, 1])
+  const lockIconScale = useTransform(dragDistance, [0, LOCK_THRESHOLD], [0.5, 1])
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -230,9 +235,10 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const handlePointerMove = (e: React.PointerEvent) => {
     if (recordingMode !== 'holding') return
 
-    const dragDistance = dragStartYRef.current - e.clientY
-    // Will use this for lock indicator animation in next task
-    if (dragDistance >= LOCK_THRESHOLD) {
+    const distance = Math.max(0, dragStartYRef.current - e.clientY)
+    dragDistance.set(distance)
+
+    if (distance >= LOCK_THRESHOLD && recordingMode !== 'locked') {
       setRecordingMode('locked')
     }
   }
@@ -246,6 +252,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
       setRecordingMode('idle')
     }
     // If locked, recording continues - user taps again to stop
+    dragDistance.set(0)
   }
 
   const handleLockedTap = () => {
@@ -324,6 +331,18 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         {/* Voice Recording */}
         {mode === 'voice' && (
           <div className="voice-recorder">
+            {/* Lock indicator - shows during drag */}
+            <motion.div
+              className="lock-indicator"
+              style={{
+                opacity: lockIconOpacity,
+                scale: lockIconScale,
+              }}
+            >
+              <Lock size={24} />
+              <span>Release to lock</span>
+            </motion.div>
+
             {/* Main record/stop button - only show when not stopped with transcript */}
             {!(voiceState === 'stopped' && finalTranscript.trim()) && (
               <motion.button
