@@ -6,63 +6,96 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Changed
-- **Voice capture architecture** - Switching from Web Speech API to MediaRecorder + Whisper API
-  - Web Speech API had critical issues on Android Chrome (word duplication, aggressive auto-stop)
-  - New approach: Record audio locally, send to server, transcribe via Whisper
-  - Cost: $0.006/minute - negligible for personal use
+*Nothing yet - Phase 2A just completed!*
 
-### Reverted
-- **Hold-to-record and pull-to-lock gestures** - Attempted but reverted due to:
-  - Layout reflow caused false lock detection
-  - Android Chrome long-press conflicts with text selection
-  - Word duplication was not actually fixed by gesture changes
-  - Simple tap-to-start/stop is more reliable on mobile web
+---
+
+## v0.2.0 - Phase 2A Complete (January 13, 2026)
+
+**Milestone:** Backend Foundation + Voice Capture Working
 
 ### Added
-- Debug panel for voice recording (temporary, for investigation)
-- Recording pulse animation on mic button
-- Initial project structure
-- Design document (`docs/plans/2026-01-10-ideaflow-design.md`)
-- Voice investigation notes (`docs/plans/piped-spinning-seahorse.md`)
-- Project documentation:
-  - CLAUDE.md (project context)
-  - ARCHITECTURE.md
-  - API_REFERENCE.md
-  - GETTING_STARTED.md
-  - SPECS_OVERVIEW.md
-  - CHANGELOG.md
-  - FUTURE_FEATURES.md
+- **Express.js backend** (`src/server/index.ts`)
+  - Serves both API and built frontend from single server
+  - Health check endpoint at `/api/health`
+  - Production-ready with `npm start` command
 
-### Learned
-- **Web Speech API on Android Chrome:**
-  - Returns cumulative results (Result[3] includes Result[2]'s content)
-  - Fires `onend` aggressively without waiting for silence
-  - Auto-restart logic causes word duplication
-  - Gesture interactions conflict with browser behaviors
-- **Recommendation:** Use server-side transcription for reliable voice capture
+- **Whisper transcription endpoint** (`src/server/routes/transcribe.ts`)
+  - POST `/api/transcribe` accepts audio files
+  - Uses OpenAI Whisper API for accurate transcription
+  - Handles webm and mp4 audio formats
+  - Cost: ~$0.006/minute
 
-### Development Workflow Established
+- **MediaRecorder-based voice capture** (`src/components/CaptureModal.tsx`)
+  - Records audio using browser MediaRecorder API
+  - Sends audio to server for transcription
+  - Shows "Transcribing..." spinner while processing
+  - Works reliably on Android Chrome (no more duplication!)
+
+- **Single-server deployment**
+  - `npm start` builds frontend and runs Express
+  - Replit runs one command, serves everything
+  - No more proxy errors or dual-server setup
+
+### Changed
+- Voice capture now uses server-side Whisper instead of browser Web Speech API
+- Frontend fetches `/api/transcribe` instead of using SpeechRecognition
+
+### Removed
+- Web Speech API code (was causing Android issues)
+- Debug panel (no longer needed)
+- Hold-to-record gestures (reverted as problematic on mobile)
+
+### Technical Details
+- Dependencies added: express, cors, multer, openai, tsx
+- Environment variable required: `OPENAI_API_KEY`
+
+---
+
+## v0.1.0 - Project Initialization (January 10, 2026)
+
+**Milestone:** Design Complete + Frontend Built
+
+### Added
+- React + Vite + TypeScript frontend
+- Home page with Active/Pursuing/Deferred tabs
+- Idea capture modal (voice + text)
+- Idea detail page with Analysis + Chat tabs
+- Framer Motion animations
+- Dark theme with warm coral accents
+- Mobile-first responsive design
+- Drizzle ORM schema (not yet wired)
+- Project documentation
+
+### Learned (Web Speech API Investigation)
+- Android Chrome returns cumulative speech results
+- Browser fires `onend` aggressively
+- Gesture-based recording conflicts with mobile browser behaviors
+- **Decision:** Use server-side transcription for reliability
+
+### Development Workflow
 - Claude Code for all development
 - GitHub as source of truth
-- Replit for hosting, database, auth, secrets
+- Replit for hosting, database, secrets
 - Auto-deploy from GitHub to Replit
 
 ---
 
-## Version History
+## Roadmap
 
-### v0.1.0 - Project Initialization (January 10, 2026)
+### Phase 2B - Data Persistence (Next)
+- Wire up PostgreSQL database
+- API routes for ideas CRUD
+- Connect frontend to real API
 
-**Milestone:** Design Complete
+### Phase 3 - AI Integration
+- Claude API for idea analysis
+- Chat functionality with Claude
 
-- Completed brainstorming session
-- Defined V1 scope
-- Created comprehensive design document
-- Set up project structure
-- Established development workflow
-
-**Next:** Phase 2 - Backend + Voice Fix
+### Phase 4 - Polish & Deploy
+- Replit Auth integration
+- PWA features
+- Animation polish pass
 
 ---
 
