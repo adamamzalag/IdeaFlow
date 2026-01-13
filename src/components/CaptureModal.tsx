@@ -9,6 +9,9 @@ interface CaptureModalProps {
 
 type CaptureMode = 'voice' | 'text'
 type VoiceState = 'idle' | 'recording' | 'stopped'
+type RecordingMode = 'idle' | 'holding' | 'locked'
+
+const LOCK_THRESHOLD = 50 // Pixels to drag up to lock recording
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -53,12 +56,14 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const [interimTranscript, setInterimTranscript] = useState('') // Live preview
   const [textInput, setTextInput] = useState('')
   const [duration, setDuration] = useState(0)
+  const [recordingMode, setRecordingMode] = useState<RecordingMode>('idle')
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const timerRef = useRef<number | null>(null)
   const silenceTimerRef = useRef<number | null>(null)
   const voiceStateRef = useRef<VoiceState>('idle') // Track current state for callbacks
   const baseTranscriptRef = useRef('') // Transcript at session start (for "Continue" feature)
+  const dragStartYRef = useRef<number>(0) // Track Y position for pull-to-lock gesture
 
   // Keep ref in sync with state
   useEffect(() => {
