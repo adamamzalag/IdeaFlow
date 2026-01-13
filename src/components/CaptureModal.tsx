@@ -203,6 +203,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
 
   const stopRecording = () => {
     setVoiceState('stopped')
+    setRecordingMode('idle') // Ensure mode resets
     setInterimTranscript('') // Clear any remaining interim
 
     if (recognitionRef.current) {
@@ -221,6 +222,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   }
 
   const continueRecording = () => {
+    setRecordingMode('locked') // Go straight to locked mode (hands-free)
     startRecording(true) // Keep existing transcript
   }
 
@@ -249,9 +251,16 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
       wasHoldingRef.current = true
       // Released without locking - stop recording
       stopRecording()
-      setRecordingMode('idle')
     }
     // If locked, recording continues - user taps again to stop
+    dragDistance.set(0)
+  }
+
+  const handlePointerCancel = (e: React.PointerEvent) => {
+    ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+    if (recordingMode === 'holding') {
+      stopRecording()
+    }
     dragDistance.set(0)
   }
 
@@ -261,8 +270,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
       return
     }
     if (recordingMode === 'locked') {
-      stopRecording()
-      setRecordingMode('idle')
+      stopRecording() // stopRecording now handles resetting recordingMode
     }
   }
 
@@ -350,6 +358,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
                 onClick={handleLockedTap}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
