@@ -327,7 +327,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             {/* Main record/stop button - only show when not stopped with transcript */}
             {!(voiceState === 'stopped' && finalTranscript.trim()) && (
               <motion.button
-                className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''}`}
+                className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''} ${recordingMode === 'locked' ? 'locked' : ''}`}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
@@ -366,8 +366,9 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             )}
 
             <p className="voice-hint">
-              {voiceState === 'idle' && 'Tap to start recording'}
-              {voiceState === 'recording' && 'Tap to stop, or pause speaking'}
+              {voiceState === 'idle' && 'Hold to record, slide up to lock'}
+              {voiceState === 'recording' && recordingMode === 'locked' && 'Tap to stop'}
+              {voiceState === 'recording' && recordingMode === 'holding' && 'Release to stop, keep sliding to lock'}
               {voiceState === 'stopped' && finalTranscript.trim() && 'Continue recording or save your idea'}
             </p>
 
