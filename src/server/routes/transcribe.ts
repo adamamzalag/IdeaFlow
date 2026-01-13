@@ -36,7 +36,9 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     const openai = getOpenAIClient()
 
     // Create a File object from the buffer for OpenAI
-    const audioFile = new File([req.file.buffer], req.file.originalname || 'audio.webm', {
+    // Convert Buffer to Uint8Array for proper BlobPart compatibility
+    const audioData = new Uint8Array(req.file.buffer)
+    const audioFile = new File([audioData], req.file.originalname || 'audio.webm', {
       type: req.file.mimetype || 'audio/webm',
     })
 
