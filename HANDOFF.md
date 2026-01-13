@@ -1,6 +1,6 @@
 # IdeaFlow Session Handoff
 
-**Last Updated:** January 12, 2026
+**Last Updated:** January 13, 2026
 
 ---
 
@@ -10,7 +10,7 @@ The app has a complete frontend deployed to Replit. No backend yet - data doesn'
 
 ### What's Working
 - Home page with Active/Pursuing/Deferred tabs
-- Voice capture (fixed duplication bug on Android)
+- Voice capture with hold-to-record and pull-to-lock gestures
 - Text capture
 - Idea detail page with markdown analysis rendering
 - Chat UI (mock responses only)
@@ -58,36 +58,6 @@ The app has a complete frontend deployed to Replit. No backend yet - data doesn'
 ### After Phase 2
 - Phase 3: AI Integration (Claude API for analysis + chat)
 - Phase 4: Auth + PWA + Deploy
-
----
-
-## Known Bug: Voice Recording Duplication on Android
-
-**Problem:** On Android Chrome, voice recording duplicates words/phrases. Works fine on desktop Chrome.
-
-**Root cause:** The code auto-restarts recognition when Android stops it mid-speech. Android then re-recognizes audio still in its buffer, causing duplication.
-
-**Solution:** Replace current tap-to-start/auto-stop with two recording modes:
-
-### 1. Hold-to-Record (Quick ideas)
-- Press and hold mic button → recording
-- Release → stop recording
-- No auto-restart needed
-- If Android stops early, user sees transcript and can press again
-
-### 2. Pull-to-Lock (Longer recordings, hands-free)
-- Tap mic to start recording
-- Slide/pull up to "lock" into continuous mode
-- Tap again to stop
-- For use cases like recording while driving
-
-**UI/UX needed:**
-- Visual indicator for "locked" state (maybe a lock icon, color change)
-- Pulsing animation while recording
-- Live transcript visible during recording
-- "Continue" button still available if recording stops unexpectedly
-
-**Priority:** Fix before Phase 3 (AI integration) since voice capture is core functionality.
 
 ---
 

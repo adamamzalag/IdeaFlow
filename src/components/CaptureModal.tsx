@@ -240,7 +240,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
     const distance = Math.max(0, dragStartYRef.current - e.clientY)
     dragDistance.set(distance)
 
-    if (distance >= LOCK_THRESHOLD && recordingMode !== 'locked') {
+    if (distance >= LOCK_THRESHOLD) {
       setRecordingMode('locked')
     }
   }
