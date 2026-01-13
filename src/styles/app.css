@@ -505,6 +505,7 @@
   cursor: pointer;
   box-shadow: var(--shadow-glow);
   transition: all var(--duration-normal) var(--ease-out);
+  touch-action: none;
 }
 
 .voice-btn:hover {

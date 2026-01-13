@@ -64,6 +64,7 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const voiceStateRef = useRef<VoiceState>('idle') // Track current state for callbacks
   const baseTranscriptRef = useRef('') // Transcript at session start (for "Continue" feature)
   const dragStartYRef = useRef<number>(0) // Track Y position for pull-to-lock gesture
+  const wasHoldingRef = useRef(false) // Track if we were holding to prevent click conflict
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -218,11 +219,43 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
     startRecording(true) // Keep existing transcript
   }
 
-  const handleMainButtonClick = () => {
-    if (voiceState === 'idle') {
-      startRecording()
-    } else if (voiceState === 'recording') {
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault()
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    dragStartYRef.current = e.clientY
+    setRecordingMode('holding')
+    startRecording()
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (recordingMode !== 'holding') return
+
+    const dragDistance = dragStartYRef.current - e.clientY
+    // Will use this for lock indicator animation in next task
+    if (dragDistance >= LOCK_THRESHOLD) {
+      setRecordingMode('locked')
+    }
+  }
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+    if (recordingMode === 'holding') {
+      wasHoldingRef.current = true
+      // Released without locking - stop recording
       stopRecording()
+      setRecordingMode('idle')
+    }
+    // If locked, recording continues - user taps again to stop
+  }
+
+  const handleLockedTap = () => {
+    if (wasHoldingRef.current) {
+      wasHoldingRef.current = false
+      return
+    }
+    if (recordingMode === 'locked') {
+      stopRecording()
+      setRecordingMode('idle')
     }
   }
 
@@ -295,7 +328,10 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             {!(voiceState === 'stopped' && finalTranscript.trim()) && (
               <motion.button
                 className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''}`}
-                onClick={handleMainButtonClick}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onClick={handleLockedTap}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
