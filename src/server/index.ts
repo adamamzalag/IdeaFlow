@@ -8,7 +8,7 @@ import { ensureDefaultUser } from './utils/ensureDefaultUser'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 5000
 
 app.use(cors())
 app.use(express.json())
@@ -27,7 +27,7 @@ const distPath = path.join(__dirname, '../../dist')
 app.use(express.static(distPath))
 
 // SPA fallback - serve index.html for all non-API routes
-app.get('*', (_req, res) => {
+app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'))
 })
 
