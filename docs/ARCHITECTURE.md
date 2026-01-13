@@ -35,6 +35,13 @@ IdeaFlow is a phone-first PWA with a React frontend, Express backend, and Postgr
 │  │  PostgreSQL   │  │  Claude API   │  │ Replit Auth   │  │
 │  │  (Database)   │  │  (AI Agent)   │  │ (Identity)    │  │
 │  └───────────────┘  └───────────────┘  └───────────────┘  │
+│                             │                              │
+│                             ▼                              │
+│                    ┌───────────────┐                       │
+│                    │  Whisper API  │                       │
+│                    │  (OpenAI)     │                       │
+│                    │  Transcription│                       │
+│                    └───────────────┘                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -47,7 +54,21 @@ User speaks/types idea
         │
         ▼
 ┌───────────────────┐
-│  Web Speech API   │  (if voice)
+│  MediaRecorder    │  (if voice - records audio)
+│  API (browser)    │
+└───────────────────┘
+        │
+        ▼ (user taps stop)
+┌───────────────────┐
+│  POST /api/       │
+│  transcribe       │
+│  (send audio)     │
+└───────────────────┘
+        │
+        ▼
+┌───────────────────┐
+│  Whisper API      │
+│  (OpenAI)         │
 │  transcribes      │
 └───────────────────┘
         │
@@ -132,7 +153,7 @@ src/client/
 │   └── useChat          # Chat functionality
 └── lib/
     ├── api              # API client
-    └── speech           # Web Speech API wrapper
+    └── audio            # MediaRecorder wrapper
 ```
 
 ### Backend (Express)
@@ -142,6 +163,7 @@ src/server/
 ├── routes/
 │   ├── ideas.ts         # CRUD for ideas
 │   ├── chat.ts          # Chat endpoints
+│   ├── transcribe.ts    # Voice transcription (Whisper API)
 │   ├── auth.ts          # Replit Auth
 │   └── user.ts          # User profile
 ├── services/
