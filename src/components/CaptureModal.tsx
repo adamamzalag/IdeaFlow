@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, useMotionValue, useTransform } from 'framer-motion'
-import { X, Mic, Type, Square, Send, Play, Lock } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { X, Mic, Type, Square, Send, Play } from 'lucide-react'
 
 interface CaptureModalProps {
   onClose: () => void
@@ -9,9 +9,6 @@ interface CaptureModalProps {
 
 type CaptureMode = 'voice' | 'text'
 type VoiceState = 'idle' | 'recording' | 'stopped'
-type RecordingMode = 'idle' | 'holding' | 'locked'
-
-const LOCK_THRESHOLD = 50 // Pixels to drag up to lock recording
 
 // Web Speech API types
 interface SpeechRecognitionEvent {
@@ -52,19 +49,17 @@ interface SpeechRecognitionInstance {
 export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   const [mode, setMode] = useState<CaptureMode>('voice')
   const [voiceState, setVoiceState] = useState<VoiceState>('idle')
-  const [finalTranscript, setFinalTranscript] = useState('') // Only confirmed text
-  const [interimTranscript, setInterimTranscript] = useState('') // Live preview
+  const [finalTranscript, setFinalTranscript] = useState('')
+  const [interimTranscript, setInterimTranscript] = useState('')
   const [textInput, setTextInput] = useState('')
   const [duration, setDuration] = useState(0)
-  const [recordingMode, setRecordingMode] = useState<RecordingMode>('idle')
+  const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const timerRef = useRef<number | null>(null)
   const silenceTimerRef = useRef<number | null>(null)
-  const voiceStateRef = useRef<VoiceState>('idle') // Track current state for callbacks
-  const baseTranscriptRef = useRef('') // Transcript at session start (for "Continue" feature)
-  const dragStartYRef = useRef<number>(0) // Track Y position for pull-to-lock gesture
-  const wasHoldingRef = useRef(false) // Track if we were holding to prevent click conflict
+  const voiceStateRef = useRef<VoiceState>('idle')
+  const baseTranscriptRef = useRef('')
 
   // Helper to clear all timers
   const clearTimers = () => {
@@ -78,10 +73,11 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
     }
   }
 
-  // Motion values for lock indicator animation
-  const dragDistance = useMotionValue(0)
-  const lockIconOpacity = useTransform(dragDistance, [0, LOCK_THRESHOLD], [0, 1])
-  const lockIconScale = useTransform(dragDistance, [0, LOCK_THRESHOLD], [0.5, 1])
+  // Helper to add debug log
+  const addDebug = (msg: string) => {
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false })
+    setDebugLogs(prev => [...prev.slice(-50), `[${timestamp}] ${msg}`])
+  }
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -100,13 +96,19 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         recognition.lang = 'en-US'
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
+          // DEBUG: Log raw event data
+          addDebug(`--- onresult fired ---`)
+          addDebug(`resultIndex: ${event.resultIndex}, results.length: ${event.results.length}`)
+
           let finalText = ''
           let interimText = ''
 
-          // Rebuild transcript from ALL results in current session
           for (let i = 0; i < event.results.length; i++) {
             const result = event.results[i]
             const transcriptText = result[0].transcript
+
+            // DEBUG: Log each result
+            addDebug(`  [${i}] "${transcriptText}" isFinal=${result.isFinal}`)
 
             if (result.isFinal) {
               finalText += transcriptText + ' '
@@ -115,8 +117,10 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             }
           }
 
-          // Combine base transcript (from "Continue") with current session's results
-          setFinalTranscript(baseTranscriptRef.current + finalText)
+          const newFinalTranscript = baseTranscriptRef.current + finalText
+          addDebug(`→ Setting final: "${newFinalTranscript}"`)
+
+          setFinalTranscript(newFinalTranscript)
           setInterimTranscript(interimText)
 
           // Reset silence timer on speech detection
@@ -124,8 +128,8 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             clearTimeout(silenceTimerRef.current)
           }
           silenceTimerRef.current = window.setTimeout(() => {
-            // Use the ref to get current state
             if (voiceStateRef.current === 'recording') {
+              addDebug('Silence timeout - stopping')
               setVoiceState('stopped')
               setInterimTranscript('')
               if (recognitionRef.current) {
@@ -136,12 +140,12 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
                 timerRef.current = null
               }
             }
-          }, 3000) // Stop after 3 seconds of silence
+          }, 3000)
         }
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+          addDebug(`ERROR: ${event.error}`)
           console.error('Speech recognition error:', event.error)
-          // Don't auto-stop on all errors - some are recoverable
           if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
             setVoiceState('idle')
             alert('Microphone access denied. Please allow microphone access and try again.')
@@ -149,8 +153,9 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         }
 
         recognition.onend = () => {
-          // Recognition ended - just stop, don't auto-restart (fixes Android duplication)
+          addDebug('onend fired')
           if (voiceStateRef.current === 'recording') {
+            addDebug('Was recording, setting to stopped')
             setVoiceState('stopped')
             setInterimTranscript('')
             clearTimers()
@@ -169,27 +174,23 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
           // Already stopped
         }
       }
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current)
-      }
+      clearTimers()
     }
-  }, []) // Empty deps - initialize once
+  }, [])
 
   const startRecording = (keepTranscript = false) => {
     if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in this browser. Try Safari on iOS or Chrome on desktop.')
+      alert('Speech recognition is not supported in this browser.')
       return
     }
 
+    addDebug(`startRecording(keepTranscript=${keepTranscript})`)
+
     if (!keepTranscript) {
       setFinalTranscript('')
-      baseTranscriptRef.current = '' // Fresh start
+      baseTranscriptRef.current = ''
       setDuration(0)
     } else {
-      // "Continue" - preserve existing transcript as base for this session
       baseTranscriptRef.current = finalTranscript
     }
     setInterimTranscript('')
@@ -197,8 +198,9 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
 
     try {
       recognitionRef.current.start()
-    } catch {
-      // Already started
+      addDebug('recognition.start() called')
+    } catch (e) {
+      addDebug(`start() error: ${e}`)
     }
 
     timerRef.current = window.setInterval(() => {
@@ -207,67 +209,30 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
   }
 
   const stopRecording = () => {
+    addDebug('stopRecording() called')
     setVoiceState('stopped')
-    setRecordingMode('idle') // Ensure mode resets
-    setInterimTranscript('') // Clear any remaining interim
+    setInterimTranscript('')
 
     if (recognitionRef.current) {
       recognitionRef.current.stop()
+      addDebug('recognition.stop() called')
     }
 
     clearTimers()
   }
 
   const continueRecording = () => {
-    setRecordingMode('locked') // Go straight to locked mode (hands-free)
-    startRecording(true) // Keep existing transcript
+    addDebug('continueRecording()')
+    startRecording(true)
   }
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault()
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
-    dragStartYRef.current = e.clientY
-    setRecordingMode('holding')
-    startRecording()
-  }
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (recordingMode !== 'holding') return
-
-    const distance = Math.max(0, dragStartYRef.current - e.clientY)
-    dragDistance.set(distance)
-
-    if (distance >= LOCK_THRESHOLD) {
-      setRecordingMode('locked')
-    }
-  }
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
-    if (recordingMode === 'holding') {
-      wasHoldingRef.current = true
-      // Released without locking - stop recording
+  // Simple tap handler
+  const handleMicClick = () => {
+    addDebug(`handleMicClick - voiceState: ${voiceState}`)
+    if (voiceState === 'idle') {
+      startRecording()
+    } else if (voiceState === 'recording') {
       stopRecording()
-    }
-    // If locked, recording continues - user taps again to stop
-    dragDistance.set(0)
-  }
-
-  const handlePointerCancel = (e: React.PointerEvent) => {
-    ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
-    if (recordingMode === 'holding') {
-      stopRecording()
-    }
-    dragDistance.set(0)
-  }
-
-  const handleLockedTap = () => {
-    if (wasHoldingRef.current) {
-      wasHoldingRef.current = false
-      return
-    }
-    if (recordingMode === 'locked') {
-      stopRecording() // stopRecording now handles resetting recordingMode
     }
   }
 
@@ -289,7 +254,6 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Combined display: final + interim (interim shown differently)
   const displayTranscript = finalTranscript + interimTranscript
 
   return (
@@ -336,27 +300,11 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
         {/* Voice Recording */}
         {mode === 'voice' && (
           <div className="voice-recorder">
-            {/* Lock indicator - shows during drag */}
-            <motion.div
-              className="lock-indicator"
-              style={{
-                opacity: lockIconOpacity,
-                scale: lockIconScale,
-              }}
-            >
-              <Lock size={24} />
-              <span>Release to lock</span>
-            </motion.div>
-
-            {/* Main record/stop button - only show when not stopped with transcript */}
+            {/* Main record/stop button */}
             {!(voiceState === 'stopped' && finalTranscript.trim()) && (
               <motion.button
-                className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''} ${recordingMode === 'locked' ? 'locked' : ''}`}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}
-                onClick={handleLockedTap}
+                className={`voice-btn ${voiceState === 'recording' ? 'recording' : ''}`}
+                onClick={handleMicClick}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -391,9 +339,8 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
             )}
 
             <p className="voice-hint">
-              {voiceState === 'idle' && 'Hold to record, slide up to lock'}
-              {voiceState === 'recording' && recordingMode === 'locked' && 'Tap to stop'}
-              {voiceState === 'recording' && recordingMode === 'holding' && 'Release to stop, keep sliding to lock'}
+              {voiceState === 'idle' && 'Tap to start recording'}
+              {voiceState === 'recording' && 'Tap to stop'}
               {voiceState === 'stopped' && finalTranscript.trim() && 'Continue recording or save your idea'}
             </p>
 
@@ -409,6 +356,34 @@ export function CaptureModal({ onClose, onCapture }: CaptureModalProps) {
                 )}
                 <span>"</span>
               </motion.div>
+            )}
+
+            {/* DEBUG PANEL */}
+            {debugLogs.length > 0 && (
+              <div style={{
+                marginTop: '16px',
+                padding: '8px',
+                background: '#1a1a1a',
+                borderRadius: '8px',
+                fontSize: '10px',
+                fontFamily: 'monospace',
+                maxHeight: '150px',
+                overflow: 'auto',
+                border: '1px solid #333'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ color: '#ff6b6b' }}>DEBUG LOG</span>
+                  <button
+                    onClick={() => setDebugLogs([])}
+                    style={{ background: '#333', border: 'none', color: '#888', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}
+                  >
+                    Clear
+                  </button>
+                </div>
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: '#aaa' }}>
+                  {debugLogs.join('\n')}
+                </pre>
+              </div>
             )}
           </div>
         )}
