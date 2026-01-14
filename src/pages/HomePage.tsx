@@ -25,6 +25,8 @@ export function HomePage({
   const [isEditing, setIsEditing] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isRecordingInReview, setIsRecordingInReview] = useState(false)
+  const [isTranscribingInReview, setIsTranscribingInReview] = useState(false)
 
   // Refs for recording
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -131,11 +133,81 @@ export function HomePage({
     }
   }
 
+  // Start recording within the review modal
+  const startRecordingInReview = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      recordingStreamRef.current = stream
+      const recorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      })
+      audioChunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+
+      recorder.onstop = async () => {
+        // Stop stream tracks
+        if (recordingStreamRef.current) {
+          recordingStreamRef.current.getTracks().forEach(t => t.stop())
+          recordingStreamRef.current = null
+        }
+
+        // Create blob and transcribe
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType
+        })
+
+        setIsTranscribingInReview(true)
+        try {
+          const formData = new FormData()
+          formData.append('audio', audioBlob, 'recording.webm')
+
+          const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (!response.ok) {
+            throw new Error('Transcription failed')
+          }
+
+          const data = await response.json()
+          // Append to existing transcript with space
+          setTranscript(prev => prev ? `${prev} ${data.transcript}` : data.transcript)
+        } catch (error) {
+          console.error('Transcription error:', error)
+          alert('Failed to transcribe audio. Please try again.')
+        } finally {
+          setIsTranscribingInReview(false)
+        }
+      }
+
+      mediaRecorderRef.current = recorder
+      recorder.start()
+      setIsRecordingInReview(true)
+    } catch (err) {
+      console.error('Failed to start recording:', err)
+      alert('Could not access microphone. Please allow microphone access and try again.')
+    }
+  }
+
+  const stopRecordingInReview = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+      setIsRecordingInReview(false)
+    }
+  }
+
   const handleContinue = () => {
-    setShowReviewScreen(false)
-    setIsEditing(false)
-    // Start recording again after a brief delay
-    setTimeout(() => startRecording(), 100)
+    if (isRecordingInReview) {
+      // Stop recording if already recording
+      stopRecordingInReview()
+    } else {
+      // Start recording within the review modal
+      startRecordingInReview()
+    }
   }
 
   const handleEdit = () => {
@@ -152,6 +224,8 @@ export function HomePage({
       setTranscript('')
       setShowReviewScreen(false)
       setIsEditing(false)
+      setIsRecordingInReview(false)
+      setIsTranscribingInReview(false)
     } catch (err) {
       alert('Failed to save idea. Please try again.')
     } finally {
@@ -160,9 +234,21 @@ export function HomePage({
   }
 
   const handleCancel = () => {
+    // Stop any ongoing recording in review
+    if (isRecordingInReview) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop()
+      }
+      if (recordingStreamRef.current) {
+        recordingStreamRef.current.getTracks().forEach(t => t.stop())
+        recordingStreamRef.current = null
+      }
+    }
     setTranscript('')
     setShowReviewScreen(false)
     setIsEditing(false)
+    setIsRecordingInReview(false)
+    setIsTranscribingInReview(false)
   }
 
   return (
@@ -294,17 +380,31 @@ export function HomePage({
 
               <div className="review-actions">
                 <button
-                  className="review-action-btn secondary"
+                  className={`review-action-btn ${isRecordingInReview ? 'recording-mic' : 'secondary'} ${isTranscribingInReview ? 'transcribing' : ''}`}
                   onClick={handleContinue}
-                  disabled={isSaving}
+                  disabled={isSaving || isTranscribingInReview}
                 >
-                  <Play size={18} />
-                  <span>Continue</span>
+                  {isTranscribingInReview ? (
+                    <>
+                      <div className="btn-spinner" />
+                      <span>Transcribing...</span>
+                    </>
+                  ) : isRecordingInReview ? (
+                    <>
+                      <Mic size={18} />
+                      <span>Tap to Stop</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={18} />
+                      <span>Continue</span>
+                    </>
+                  )}
                 </button>
                 <button
                   className="review-action-btn secondary"
                   onClick={handleEdit}
-                  disabled={isSaving}
+                  disabled={isSaving || isRecordingInReview || isTranscribingInReview}
                 >
                   {isEditing ? <Check size={18} /> : <Pencil size={18} />}
                   <span>{isEditing ? 'Done' : 'Edit'}</span>
@@ -312,7 +412,7 @@ export function HomePage({
                 <button
                   className="review-action-btn primary"
                   onClick={handleSave}
-                  disabled={!transcript.trim() || isSaving}
+                  disabled={!transcript.trim() || isSaving || isRecordingInReview || isTranscribingInReview}
                 >
                   {isSaving ? (
                     <>

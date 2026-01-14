@@ -1699,3 +1699,37 @@
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
+
+/* Recording Mic Button in Review Modal */
+.review-action-btn.recording-mic {
+  background: var(--color-error, #ff6b6b);
+  color: white;
+  border: none;
+  animation: review-mic-pulse 1s infinite;
+}
+
+.review-action-btn.recording-mic:hover:not(:disabled) {
+  background: var(--color-error, #ff6b6b);
+}
+
+@keyframes review-mic-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 100, 100, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(255, 100, 100, 0.6);
+  }
+}
+
+/* Transcribing state in review modal */
+.review-action-btn.transcribing {
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
+  animation: none;
+}
+
+.review-action-btn.transcribing .btn-spinner {
+  border-color: var(--color-border-default);
+  border-top-color: var(--color-accent);
+}
