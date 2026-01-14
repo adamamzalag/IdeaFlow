@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle, Loader2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Idea, Message } from '../lib/types'
+import { getChatMessages, sendChatMessage, regenerateAnalysisFromChat, markIdeaViewed, getIdea } from '../lib/api'
 
 type DetailTab = 'analysis' | 'chat'
 
@@ -13,44 +14,78 @@ interface IdeaDetailPageProps {
   onStatusChange: (ideaId: string, status: 'pursuing' | 'deferred') => void
 }
 
-export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageProps) {
+export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: IdeaDetailPageProps) {
+  const [idea, setIdea] = useState<Idea>(initialIdea)
   const [activeTab, setActiveTab] = useState<DetailTab>('analysis')
   const [showTranscript, setShowTranscript] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [hasNewAnalysis, setHasNewAnalysis] = useState(false)
+  const [hasNewMessages, setHasNewMessages] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [isUpdatingAnalysis, setIsUpdatingAnalysis] = useState(false)
+  const [loadingMessages, setLoadingMessages] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const previousTab = useRef<DetailTab>('analysis')
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  // Load chat messages and mark idea as viewed on mount
+  useEffect(() => {
+    async function initialize() {
+      try {
+        // Mark idea as viewed
+        await markIdeaViewed(idea.id)
+
+        // Load existing chat messages
+        const existingMessages = await getChatMessages(idea.id)
+        setMessages(existingMessages)
+      } catch (err) {
+        console.error('Failed to initialize:', err)
+      } finally {
+        setLoadingMessages(false)
+      }
+    }
+    initialize()
+  }, [idea.id])
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (activeTab === 'chat') {
       scrollToBottom()
     }
   }, [messages, activeTab])
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return
+  const handleSend = async () => {
+    if (!inputValue.trim() || isSending) return
 
-    const newMessage: Message = {
-      role: 'user',
-      content: inputValue
-    }
-
-    setMessages(prev => [...prev, newMessage])
+    const userMessage = inputValue.trim()
     setInputValue('')
+    setIsSending(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
-        role: 'assistant',
-        content: "I've updated the analysis based on your input. You can switch to the Analysis tab to see the changes."
-      }
-      setMessages(prev => [...prev, aiResponse])
-      setHasNewAnalysis(true)
-    }, 1500)
+    // Optimistically add user message
+    const newUserMessage: Message = {
+      role: 'user',
+      content: userMessage
+    }
+    setMessages(prev => [...prev, newUserMessage])
+
+    try {
+      // Send message to API
+      const result = await sendChatMessage(idea.id, userMessage)
+
+      // Update messages with the full history from server
+      setMessages(result.messages)
+      setHasNewMessages(true)
+    } catch (err) {
+      console.error('Failed to send message:', err)
+      // Remove optimistic message on error
+      setMessages(prev => prev.slice(0, -1))
+      alert('Failed to send message. Please try again.')
+    } finally {
+      setIsSending(false)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -60,10 +95,27 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
     }
   }
 
-  const handleTabChange = (tab: DetailTab) => {
+  const handleTabChange = async (tab: DetailTab) => {
+    const wasOnChat = previousTab.current === 'chat'
+    previousTab.current = tab
     setActiveTab(tab)
-    if (tab === 'analysis') {
-      setHasNewAnalysis(false)
+
+    // When switching FROM Chat TO Analysis, check if we need to regenerate
+    if (wasOnChat && tab === 'analysis' && hasNewMessages) {
+      setIsUpdatingAnalysis(true)
+      try {
+        const result = await regenerateAnalysisFromChat(idea.id)
+        if (result.updated) {
+          // Re-fetch the idea to get the updated analysis
+          const updatedIdea = await getIdea(idea.id)
+          setIdea(updatedIdea)
+        }
+        setHasNewMessages(false)
+      } catch (err) {
+        console.error('Failed to update analysis:', err)
+      } finally {
+        setIsUpdatingAnalysis(false)
+      }
     }
   }
 
@@ -100,9 +152,13 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
             className={`detail-tab ${activeTab === 'analysis' ? 'active' : ''}`}
             onClick={() => handleTabChange('analysis')}
           >
-            <FileText size={16} />
-            Analysis
-            {hasNewAnalysis && activeTab !== 'analysis' && (
+            {isUpdatingAnalysis ? (
+              <Loader2 size={16} className="spin" />
+            ) : (
+              <FileText size={16} />
+            )}
+            {isUpdatingAnalysis ? 'Updating...' : 'Analysis'}
+            {hasNewMessages && activeTab !== 'analysis' && !isUpdatingAnalysis && (
               <span className="detail-tab-badge" />
             )}
           </button>
@@ -158,6 +214,8 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
                 onSend={handleSend}
                 onKeyDown={handleKeyDown}
                 messagesEndRef={messagesEndRef}
+                isLoading={loadingMessages}
+                isSending={isSending}
               />
             </motion.div>
           )}
@@ -239,9 +297,20 @@ interface ChatViewProps {
   onSend: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
   messagesEndRef: React.RefObject<HTMLDivElement>
+  isLoading: boolean
+  isSending: boolean
 }
 
-function ChatView({ messages, inputValue, onInputChange, onSend, onKeyDown, messagesEndRef }: ChatViewProps) {
+function ChatView({ messages, inputValue, onInputChange, onSend, onKeyDown, messagesEndRef, isLoading, isSending }: ChatViewProps) {
+  if (isLoading) {
+    return (
+      <div className="chat-empty">
+        <Loader2 className="chat-empty-icon spin" />
+        <p className="chat-empty-text">Loading messages...</p>
+      </div>
+    )
+  }
+
   return (
     <>
       {messages.length === 0 ? (
@@ -263,6 +332,15 @@ function ChatView({ messages, inputValue, onInputChange, onSend, onKeyDown, mess
               {message.content}
             </motion.div>
           ))}
+          {isSending && (
+            <motion.div
+              className="chat-message assistant"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <Loader2 size={16} className="spin" style={{ display: 'inline-block' }} />
+            </motion.div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       )}
@@ -276,13 +354,14 @@ function ChatView({ messages, inputValue, onInputChange, onSend, onKeyDown, mess
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={onKeyDown}
             rows={1}
+            disabled={isSending}
           />
           <button
             className="chat-send"
             onClick={onSend}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || isSending}
           >
-            <Send size={16} />
+            {isSending ? <Loader2 size={16} className="spin" /> : <Send size={16} />}
           </button>
         </div>
       </div>
