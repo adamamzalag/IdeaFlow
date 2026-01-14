@@ -167,6 +167,8 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 body {
@@ -179,6 +181,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* Subtle noise texture overlay */
@@ -207,6 +210,25 @@ body::before {
 
 .text-balance {
   text-wrap: balance;
+}
+
+/* ============================================
+   OVERFLOW PROTECTION
+   Global text wrapping and container constraints
+   ============================================ */
+
+/* Ensure all text breaks properly */
+* {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Ensure containers respect viewport */
+.app,
+.detail-page,
+.main {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ============================================

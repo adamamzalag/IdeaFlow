@@ -757,6 +757,7 @@
 .detail-title-area {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .detail-status {
@@ -775,6 +776,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Detail Page Tabs */
@@ -823,7 +825,9 @@
 .detail-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: var(--space-4) var(--page-padding);
+  max-width: 100%;
 }
 
 /* Transcript Section */
@@ -871,6 +875,8 @@
   background: var(--color-bg-elevated);
   border-radius: var(--radius-md);
   font-style: italic;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 /* Analysis Document - Unified presentation */
@@ -879,6 +885,8 @@
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-4);
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .analysis-section {
@@ -933,6 +941,8 @@
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
   color: var(--color-text-primary);
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Headers */
@@ -1127,6 +1137,9 @@
   border-radius: var(--radius-lg);
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .chat-message.user {
