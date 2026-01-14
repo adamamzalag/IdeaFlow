@@ -30,6 +30,7 @@ export interface ChatMessage {
 
 export interface AnalysisResult {
   content: string
+  title: string  // AI-generated short title (5-10 words max)
 }
 
 /**
@@ -40,7 +41,9 @@ export async function generateAnalysis(rawInput: string): Promise<AnalysisResult
 
 You are helping analyze and develop a new idea. The user has just captured a raw idea - it might be rough, incomplete, or stream-of-consciousness. That's fine.
 
-Your job is to write a thoughtful analysis in freeform markdown. Don't use rigid sections or templates - write naturally, covering whatever aspects are most relevant to THIS specific idea. You might touch on:
+First, generate a short title (5-10 words max) that captures the essence of this idea. The title should be clear and descriptive, not the raw input text.
+
+Then provide a thoughtful analysis in freeform markdown. Don't use rigid sections or templates - write naturally, covering whatever aspects are most relevant to THIS specific idea. You might touch on:
 - What the core concept seems to be
 - Why it might be valuable or interesting
 - Potential challenges or considerations
@@ -48,7 +51,13 @@ Your job is to write a thoughtful analysis in freeform markdown. Don't use rigid
 - Connections to Adam's context (e-commerce, limited time, etc.)
 - Rough sense of effort/complexity if relevant
 
-Write conversationally but substantively. Be honest - if an idea seems half-baked, say so constructively. If it seems promising, explain why. The goal is to help Adam think through the idea, not to fill out a form.`
+Write conversationally but substantively. Be honest - if an idea seems half-baked, say so constructively. If it seems promising, explain why. The goal is to help Adam think through the idea, not to fill out a form.
+
+Format your response EXACTLY like this:
+TITLE: [your short title here]
+
+ANALYSIS:
+[your analysis here]`
 
   const response = await openrouter.chat.completions.create({
     model: MODEL,
@@ -59,8 +68,41 @@ Write conversationally but substantively. Be honest - if an idea seems half-bake
     ],
   })
 
-  const content = response.choices[0]?.message?.content || ''
-  return { content }
+  const fullResponse = response.choices[0]?.message?.content || ''
+
+  // Parse title and analysis from response
+  const { title, content } = parseAnalysisResponse(fullResponse, rawInput)
+  return { content, title }
+}
+
+/**
+ * Parses the AI response to extract title and analysis
+ */
+function parseAnalysisResponse(response: string, rawInput: string): { title: string; content: string } {
+  // Try to extract TITLE: line
+  const titleMatch = response.match(/^TITLE:\s*(.+?)(?:\n|$)/im)
+  const analysisMatch = response.match(/ANALYSIS:\s*([\s\S]*)/im)
+
+  let title: string
+  let content: string
+
+  if (titleMatch && titleMatch[1]) {
+    title = titleMatch[1].trim()
+  } else {
+    // Fallback: use first 50 chars of rawInput
+    title = rawInput.slice(0, 50) + (rawInput.length > 50 ? '...' : '')
+  }
+
+  if (analysisMatch && analysisMatch[1]) {
+    content = analysisMatch[1].trim()
+  } else {
+    // Fallback: use the whole response (minus title line if present)
+    content = titleMatch
+      ? response.replace(/^TITLE:\s*.+?\n/im, '').trim()
+      : response.trim()
+  }
+
+  return { title, content }
 }
 
 /**
@@ -133,7 +175,15 @@ You previously analyzed an idea and then had a conversation with Adam about it. 
 
 Don't just append new stuff to the old analysis - thoughtfully merge and revise. The result should read as a fresh, complete analysis that reflects everything learned through the conversation.
 
-Write in freeform markdown, covering whatever aspects are most relevant. Be substantive but concise.`
+Also generate a short title (5-10 words max) that captures the essence of this idea based on the updated understanding.
+
+Write in freeform markdown, covering whatever aspects are most relevant. Be substantive but concise.
+
+Format your response EXACTLY like this:
+TITLE: [your short title here]
+
+ANALYSIS:
+[your analysis here]`
 
   const userPrompt = `ORIGINAL IDEA:
 ${rawInput}
@@ -155,6 +205,9 @@ Please create an updated analysis that incorporates the insights from our conver
     ],
   })
 
-  const content = response.choices[0]?.message?.content || ''
-  return { content }
+  const fullResponse = response.choices[0]?.message?.content || ''
+
+  // Parse title and analysis from response
+  const { title, content } = parseAnalysisResponse(fullResponse, rawInput)
+  return { content, title }
 }

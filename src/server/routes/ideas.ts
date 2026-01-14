@@ -72,11 +72,12 @@ router.post('/ideas', async (req, res) => {
           content: { markdown: result.content },
         })
 
-        // Update idea status to ready
+        // Update idea status to ready and save the AI-generated title
         await db
           .update(ideas)
           .set({
             status: 'ready',
+            title: result.title,
             analysisViewedAt: null,
             updatedAt: new Date(),
           })

@@ -210,10 +210,11 @@ router.post('/ideas/:id/analyze', async (req, res) => {
       content: { markdown: result.content }
     })
 
-    // Mark analysis as unviewed (set analysisViewedAt to null)
+    // Update title and mark analysis as unviewed (set analysisViewedAt to null)
     await db
       .update(ideas)
       .set({
+        title: result.title,
         analysisViewedAt: null,
         updatedAt: new Date()
       })
@@ -224,7 +225,8 @@ router.post('/ideas/:id/analyze', async (req, res) => {
       analysis: {
         version: newVersion,
         content: result.content
-      }
+      },
+      title: result.title
     })
   } catch (error) {
     console.error('Error regenerating analysis:', error)

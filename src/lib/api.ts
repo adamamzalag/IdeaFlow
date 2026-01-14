@@ -3,6 +3,17 @@ import type { Idea, IdeaStatus, Analysis, Message } from './types'
 const API_BASE = '/api'
 
 /**
+ * Helper to get title with fallback to truncated rawInput
+ */
+function getTitleWithFallback(idea: any): string {
+  if (idea.title) {
+    return idea.title
+  }
+  // Fallback: truncate rawInput
+  return idea.rawInput.slice(0, 50) + (idea.rawInput.length > 50 ? '...' : '')
+}
+
+/**
  * Fetch all ideas from the backend
  */
 export async function getIdeas(): Promise<Idea[]> {
@@ -15,7 +26,7 @@ export async function getIdeas(): Promise<Idea[]> {
   // Transform to frontend format
   return data.map((idea: any) => ({
     id: idea.id,
-    title: idea.rawInput.slice(0, 50) + (idea.rawInput.length > 50 ? '...' : ''),
+    title: getTitleWithFallback(idea),
     rawInput: idea.rawInput,
     audioUrl: idea.audioUrl,
     status: idea.status as IdeaStatus,
@@ -38,7 +49,7 @@ export async function getIdea(id: string): Promise<Idea> {
   // Transform to frontend format
   const result: Idea = {
     id: idea.id,
-    title: idea.rawInput.slice(0, 50) + (idea.rawInput.length > 50 ? '...' : ''),
+    title: getTitleWithFallback(idea),
     rawInput: idea.rawInput,
     audioUrl: idea.audioUrl,
     status: idea.status as IdeaStatus,
@@ -76,9 +87,10 @@ export async function createIdea(rawInput: string, isVoice: boolean): Promise<Id
   const idea = await response.json()
 
   // Transform to frontend format
+  // Note: title will be null initially (still processing), fallback to rawInput
   return {
     id: idea.id,
-    title: idea.rawInput.slice(0, 50) + (idea.rawInput.length > 50 ? '...' : ''),
+    title: getTitleWithFallback(idea),
     rawInput: idea.rawInput,
     audioUrl: idea.audioUrl,
     status: idea.status as IdeaStatus,
@@ -107,7 +119,7 @@ export async function updateIdeaStatus(id: string, status: IdeaStatus): Promise<
   // Transform to frontend format
   const result: Idea = {
     id: idea.id,
-    title: idea.rawInput.slice(0, 50) + (idea.rawInput.length > 50 ? '...' : ''),
+    title: getTitleWithFallback(idea),
     rawInput: idea.rawInput,
     audioUrl: idea.audioUrl,
     status: idea.status as IdeaStatus,
