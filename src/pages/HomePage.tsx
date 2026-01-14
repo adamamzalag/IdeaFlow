@@ -133,6 +133,8 @@ interface IdeaCardProps {
 }
 
 function IdeaCard({ idea, onClick }: IdeaCardProps) {
+  const isUnread = idea.status === 'ready' && !idea.analysisViewedAt
+
   return (
     <motion.div
       className="idea-card"
@@ -143,6 +145,7 @@ function IdeaCard({ idea, onClick }: IdeaCardProps) {
       }}
       transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
     >
+      {isUnread && <div className="idea-card-unread-dot" />}
       <div className="idea-card-content">
         <div className="idea-card-header">
           <h3 className="idea-card-title">{idea.title}</h3>
@@ -162,7 +165,7 @@ function StatusBadge({ status }: { status: Idea['status'] }) {
     return (
       <span className="idea-card-status processing">
         <span className="idea-card-status-dot" />
-        Processing
+        Analyzing...
       </span>
     )
   }
