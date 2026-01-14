@@ -718,6 +718,7 @@
   height: 100dvh;
   max-width: var(--page-max-width);
   margin: 0 auto;
+  overflow-x: hidden; /* Catch any overflow */
 }
 
 .detail-header {
@@ -726,6 +727,8 @@
   padding-top: calc(var(--space-3) + env(safe-area-inset-top));
   background: var(--color-bg-deep);
   border-bottom: 1px solid var(--color-border-subtle);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .detail-header-top {
@@ -786,6 +789,8 @@
   padding: var(--space-1);
   background: var(--color-bg-elevated);
   border-radius: var(--radius-md);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .detail-tab {
@@ -803,6 +808,9 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
+  min-width: 0; /* Allow shrinking below content */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .detail-tab:hover {
@@ -846,6 +854,7 @@
   padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
   border-top: 1px solid var(--color-border-subtle);
   z-index: var(--z-sticky);
+  box-sizing: border-box;
 }
 
 /* Transcript Section */
@@ -895,6 +904,9 @@
   font-style: italic;
   overflow-wrap: break-word;
   word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Analysis Document - Unified presentation */
@@ -1021,7 +1033,9 @@
 .markdown-content ul,
 .markdown-content ol {
   margin-bottom: var(--space-3);
-  padding-left: var(--space-5);
+  padding-left: var(--space-4); /* Reduced from space-5 for mobile */
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .markdown-content li {
@@ -1067,6 +1081,8 @@
   background: var(--color-bg-surface);
   border-radius: var(--radius-md);
   overflow-x: auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .markdown-content pre code {
@@ -1174,6 +1190,8 @@
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .chat-message.user {
@@ -1223,6 +1241,8 @@
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-input {
@@ -1238,6 +1258,8 @@
   border: none;
   resize: none;
   overflow-y: auto;
+  min-width: 0; /* Allow shrinking below content */
+  box-sizing: border-box;
 }
 
 .chat-input::placeholder {
@@ -1326,6 +1348,8 @@
   display: flex;
   gap: var(--space-3);
   margin-top: var(--space-3);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* When there's no chat input above, remove extra margin */
@@ -1346,6 +1370,11 @@
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out);
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .action-btn.primary {
@@ -1366,6 +1395,17 @@
 .action-btn.secondary:hover {
   background: var(--color-bg-surface);
   color: var(--color-text-primary);
+}
+
+/* Active state for toggle buttons (Pursue/Defer) */
+.action-btn.active {
+  background: var(--color-accent);
+  color: var(--color-bg-deep);
+  border-color: var(--color-accent);
+}
+
+.action-btn.active:hover {
+  background: var(--color-accent-hover);
 }
 
 /* ============================================
@@ -1464,6 +1504,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .analysis-modal-header {
@@ -1473,6 +1514,7 @@
   padding: var(--space-4) var(--page-padding);
   border-bottom: 1px solid var(--color-border-subtle);
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .analysis-modal-header h3 {
@@ -1481,6 +1523,10 @@
   font-weight: var(--font-medium);
   color: var(--color-text-primary);
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .analysis-modal-close {
@@ -1507,6 +1553,8 @@
   overflow-y: auto;
   padding: var(--space-4) var(--page-padding);
   padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* ============================================

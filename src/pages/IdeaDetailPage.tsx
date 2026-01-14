@@ -11,7 +11,7 @@ type DetailTab = 'analysis' | 'chat'
 interface IdeaDetailPageProps {
   idea: Idea
   onBack: () => void
-  onStatusChange: (ideaId: string, status: 'pursuing' | 'deferred') => void
+  onStatusChange: (ideaId: string, status: 'pursuing' | 'deferred' | 'ready') => void
 }
 
 // Hook to handle keyboard visibility on mobile (especially Android Chrome)
@@ -379,22 +379,22 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
           </div>
         )}
 
-        {/* Footer Actions - hide when keyboard is open to prevent accidental taps */}
-        {keyboardOffset === 0 && (idea.status === 'ready' || idea.status === 'processing') && (
+        {/* Footer Actions - hide when keyboard is open, show for all statuses except processing */}
+        {keyboardOffset === 0 && idea.status !== 'processing' && (
           <div className="detail-footer-actions">
             <button
-              className="action-btn secondary"
-              onClick={() => onStatusChange(idea.id, 'deferred')}
+              className={`action-btn secondary ${idea.status === 'deferred' ? 'active' : ''}`}
+              onClick={() => onStatusChange(idea.id, idea.status === 'deferred' ? 'ready' : 'deferred')}
             >
               <Clock size={16} />
-              Defer
+              {idea.status === 'deferred' ? 'Deferred ✓' : 'Defer'}
             </button>
             <button
-              className="action-btn primary"
-              onClick={() => onStatusChange(idea.id, 'pursuing')}
+              className={`action-btn primary ${idea.status === 'pursuing' ? 'active' : ''}`}
+              onClick={() => onStatusChange(idea.id, idea.status === 'pursuing' ? 'ready' : 'pursuing')}
             >
               <Check size={16} />
-              Pursue
+              {idea.status === 'pursuing' ? 'Pursuing ✓' : 'Pursue'}
             </button>
           </div>
         )}

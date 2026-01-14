@@ -27,6 +27,7 @@ export function HomePage({
   const [isSaving, setIsSaving] = useState(false)
   const [isRecordingInReview, setIsRecordingInReview] = useState(false)
   const [isTranscribingInReview, setIsTranscribingInReview] = useState(false)
+  const [reviewKeyboardOffset, setReviewKeyboardOffset] = useState(0)
 
   // Refs for recording
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -42,6 +43,25 @@ export function HomePage({
       if (recordingStreamRef.current) {
         recordingStreamRef.current.getTracks().forEach(t => t.stop())
       }
+    }
+  }, [])
+
+  // Keyboard detection for review modal
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+
+    const handleResize = () => {
+      const offset = window.innerHeight - viewport.height
+      setReviewKeyboardOffset(offset > 0 ? offset : 0)
+    }
+
+    viewport.addEventListener('resize', handleResize)
+    viewport.addEventListener('scroll', handleResize)
+
+    return () => {
+      viewport.removeEventListener('resize', handleResize)
+      viewport.removeEventListener('scroll', handleResize)
     }
   }, [])
 
@@ -357,6 +377,11 @@ export function HomePage({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              style={{
+                paddingBottom: isEditing && reviewKeyboardOffset > 0
+                  ? `calc(var(--space-4) + env(safe-area-inset-bottom) + ${reviewKeyboardOffset}px)`
+                  : undefined
+              }}
             >
               <div className="review-header">
                 <h2 className="review-title">Your Idea</h2>
