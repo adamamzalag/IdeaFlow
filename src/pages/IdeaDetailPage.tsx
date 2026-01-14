@@ -57,7 +57,17 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
   const audioChunksRef = useRef<Blob[]>([])
   const recordingStreamRef = useRef<MediaStream | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const keyboardOffset = useKeyboardOffset()
+
+  // Auto-resize textarea as user types
+  useEffect(() => {
+    const textarea = textareaRef.current
+    if (textarea) {
+      textarea.style.height = 'auto'
+      textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px'
+    }
+  }, [inputValue])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -355,6 +365,7 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
                 )}
               </button>
               <textarea
+                ref={textareaRef}
                 className="chat-input"
                 placeholder="Ask a question..."
                 value={inputValue}
