@@ -3,6 +3,7 @@ import { db } from '../../db'
 import { ideas, analyses } from '../../db/schema'
 import { eq, desc, and } from 'drizzle-orm'
 import { getDefaultUserId } from '../utils/ensureDefaultUser'
+import { generateAnalysis } from '../services/ai'
 
 const router = Router()
 
@@ -42,39 +43,60 @@ router.post('/ideas', async (req, res) => {
   try {
     const { rawInput } = req.body
 
-    // Validate rawInput
     if (!rawInput || typeof rawInput !== 'string') {
       return res.status(400).json({ error: 'rawInput is required and must be a string' })
     }
 
     const userId = getDefaultUserId()
 
-    // Create the idea with status 'ready' (skip processing until Phase 3)
+    // Create the idea with status 'processing'
     const [newIdea] = await db
       .insert(ideas)
       .values({
         userId,
         rawInput: rawInput.trim(),
-        status: 'ready',
+        status: 'processing',
       })
       .returning()
 
-    // Create placeholder analysis
-    const placeholderContent = {
-      markdown: `# Analysis Coming Soon
-
-AI-powered analysis will be available in a future update.`
-    }
-
-    await db
-      .insert(analyses)
-      .values({
-        ideaId: newIdea.id,
-        version: 1,
-        content: placeholderContent,
-      })
-
+    // Return immediately - don't wait for analysis
     res.status(201).json(newIdea)
+
+    // Generate analysis in background (after response sent)
+    generateAnalysis(rawInput.trim())
+      .then(async (result) => {
+        // Save analysis
+        await db.insert(analyses).values({
+          ideaId: newIdea.id,
+          version: 1,
+          content: { markdown: result.content },
+        })
+
+        // Update idea status to ready
+        await db
+          .update(ideas)
+          .set({
+            status: 'ready',
+            analysisViewedAt: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(ideas.id, newIdea.id))
+
+        console.log(`Analysis complete for idea ${newIdea.id}`)
+      })
+      .catch((error) => {
+        console.error(`Failed to generate analysis for idea ${newIdea.id}:`, error)
+        // Create fallback placeholder analysis
+        db.insert(analyses).values({
+          ideaId: newIdea.id,
+          version: 1,
+          content: { markdown: '# Analysis Failed\n\nWe could not generate an analysis for this idea. Please try again or check the chat for assistance.' },
+        }).then(() => {
+          db.update(ideas)
+            .set({ status: 'ready', updatedAt: new Date() })
+            .where(eq(ideas.id, newIdea.id))
+        })
+      })
   } catch (error) {
     console.error('Error creating idea:', error)
     res.status(500).json({
@@ -125,6 +147,40 @@ router.patch('/ideas/:id/status', async (req, res) => {
     console.error('Error updating idea status:', error)
     res.status(500).json({
       error: 'Failed to update idea status',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    })
+  }
+})
+
+// PATCH /api/ideas/:id/viewed - Mark idea as viewed
+router.patch('/ideas/:id/viewed', async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Invalid idea ID format' })
+    }
+
+    const userId = getDefaultUserId()
+
+    const [updatedIdea] = await db
+      .update(ideas)
+      .set({
+        analysisViewedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(ideas.id, id), eq(ideas.userId, userId)))
+      .returning()
+
+    if (!updatedIdea) {
+      return res.status(404).json({ error: 'Idea not found' })
+    }
+
+    res.json(updatedIdea)
+  } catch (error) {
+    console.error('Error marking idea as viewed:', error)
+    res.status(500).json({
+      error: 'Failed to mark idea as viewed',
       details: error instanceof Error ? error.message : 'Unknown error'
     })
   }
