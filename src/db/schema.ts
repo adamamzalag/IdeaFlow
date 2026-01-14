@@ -19,6 +19,7 @@ export const ideas = pgTable('ideas', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   statusChangedAt: timestamp('status_changed_at').defaultNow().notNull(),
+  analysisViewedAt: timestamp('analysis_viewed_at'), // null = unviewed
 });
 
 export const analyses = pgTable('analyses', {
