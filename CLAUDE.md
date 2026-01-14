@@ -4,6 +4,30 @@
 
 IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assistance. Users voice-record ideas in seconds, an AI agent fleshes them out in the background, and users return later to review, discuss, and decide whether to pursue or defer.
 
+## Current Status
+
+**Version:** v0.4.1 (January 14, 2026)
+**Phase:** Phase 3 Complete - AI Integration Working
+
+**What's Implemented:**
+- Voice/text capture with Whisper transcription ✓
+- Background AI analysis generation ✓
+- Idea list with Active/Pursuing/Deferred tabs ✓
+- Idea detail with Analysis + Chat tabs ✓
+- Chat with AI that updates analysis ✓
+- Pursue/Defer workflow ✓
+- Mobile-first PWA (installable) ✓
+
+**What's NOT Implemented Yet:**
+- Replit Auth (using hardcoded default user)
+- Multiple users
+- Offline support
+- Push notifications
+
+**Next:** Phase 4 - Auth & Polish
+
+---
+
 ## Development Workflow
 
 ### Build Architecture
@@ -13,7 +37,7 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 | All coding/development | Claude Code |
 | Hosting | Replit |
 | Database | Replit PostgreSQL |
-| Authentication | Replit Auth |
+| Authentication | Default user (Replit Auth planned for Phase 4) |
 | Secrets/Environment | Replit Secrets |
 | Version Control | GitHub |
 | Deployment | Replit (auto-deploys from GitHub) |
@@ -25,12 +49,19 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 3. Replit auto-pulls and deploys from GitHub
 4. Test on Replit's hosted environment
 
+### Required Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENROUTER_API_KEY` | Claude Sonnet API access |
+| `OPENAI_API_KEY` | Whisper transcription |
+| `DATABASE_URL` | PostgreSQL (auto-provided by Replit) |
+
 ### Important
 
 - **DO NOT** use Replit Agent for coding - use Claude Code
-- **DO** use Replit for all infrastructure (hosting, DB, auth, secrets)
+- **DO** use Replit for all infrastructure (hosting, DB, secrets)
 - **ALWAYS** push to GitHub before testing on Replit
-- Replit secrets should store: `OPENROUTER_API_KEY`, `OPENAI_API_KEY` (for Whisper), `DATABASE_URL` (auto-provided by Replit)
 
 ---
 
@@ -38,12 +69,14 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React + TypeScript |
-| Backend | Node.js/Express |
-| Database | PostgreSQL (Replit) |
-| Auth | Replit Auth |
+| Frontend | React 18 + TypeScript + Vite |
+| Styling | Vanilla CSS (custom design system) |
+| Animations | Framer Motion |
+| Backend | Node.js/Express 5 |
+| Database | PostgreSQL (Replit) + Drizzle ORM |
+| Auth | Hardcoded default user (Replit Auth in Phase 4) |
 | AI | Claude Sonnet (via OpenRouter) |
-| Voice | Web Speech API |
+| Transcription | OpenAI Whisper API |
 | Hosting | Replit |
 
 ---
@@ -54,103 +87,111 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 IdeaFlow/
 ├── CLAUDE.md              # This file
 ├── src/
-│   ├── client/            # React frontend
-│   │   ├── components/    # UI components
-│   │   ├── pages/         # Page components
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── lib/           # Utilities
-│   │   └── styles/        # CSS/styling
-│   ├── server/            # Express backend
-│   │   ├── routes/        # API routes
-│   │   ├── services/      # Business logic
-│   │   ├── db/            # Database schema & queries
-│   │   └── agent/         # AI agent logic
-│   └── shared/            # Shared types/constants
+│   ├── App.tsx            # Main app with routing
+│   ├── main.tsx           # React entry point
+│   ├── pages/
+│   │   ├── HomePage.tsx   # Ideas list with tabs
+│   │   └── IdeaDetailPage.tsx  # Detail with Analysis/Chat
+│   ├── components/
+│   │   └── CaptureModal.tsx    # Voice/text capture
+│   ├── lib/
+│   │   ├── api.ts         # Frontend API client
+│   │   └── types.ts       # TypeScript interfaces
+│   ├── server/
+│   │   ├── index.ts       # Express server
+│   │   ├── routes/
+│   │   │   ├── ideas.ts   # Ideas CRUD
+│   │   │   ├── chat.ts    # Chat + analysis regeneration
+│   │   │   └── transcribe.ts  # Whisper transcription
+│   │   ├── services/
+│   │   │   └── ai.ts      # Claude Sonnet integration
+│   │   └── utils/
+│   │       └── ensureDefaultUser.ts
+│   ├── db/
+│   │   ├── index.ts       # Drizzle setup
+│   │   ├── schema.ts      # PostgreSQL schema
+│   │   └── migrations/    # Database migrations
+│   └── styles/
+│       ├── app.css        # Main styles
+│       └── design-system.css  # Design tokens
 ├── docs/
-│   ├── plans/             # Design documents
-│   ├── specs/             # Feature specifications
-│   ├── ARCHITECTURE.md
-│   ├── API_REFERENCE.md
-│   ├── GETTING_STARTED.md
-│   └── ...
+│   ├── CHANGELOG.md       # Version history (source of truth)
+│   ├── ARCHITECTURE.md    # System design
+│   ├── API_REFERENCE.md   # API endpoints
+│   ├── GETTING_STARTED.md # Setup guide
+│   ├── TROUBLESHOOTING.md # Common issues
+│   └── plans/             # Design & implementation docs
 └── public/                # Static assets
 ```
 
 ---
 
-## Current Status
+## Database Schema
 
-**Phase:** Pre-implementation (Design Complete)
+```sql
+users (id, replitId, profile, createdAt, updatedAt)
+ideas (id, userId, rawInput, title, audioUrl, status, analysisViewedAt, createdAt, updatedAt)
+analyses (id, ideaId, version, content, createdAt)
+conversations (id, ideaId, messages, updatedAt)
+```
 
-**Design Doc:** `docs/plans/2026-01-10-ideaflow-design.md`
-
----
-
-## V1 Features
-
-- Voice capture (3 modes: tap-hold, tap-auto-stop, tap-tap)
-- Text capture
-- Background AI processing with structured analysis
-- Idea list (Active/Pursuing/Deferred tabs)
-- Idea detail with analysis view
-- Chat with AI to refine ideas
-- Live analysis updates from conversation
-- Pursue/Defer workflow
-- Replit Auth
-- PWA (installable on phone)
-- Beautiful animated mobile-first UI
-
----
-
-## Deferred Features
-
-See full list in design doc. Key items:
-- Image/chart generation
-- Web research
-- Self-improving analysis patterns
-- Push notifications
-- Multiple users
-- Tool integrations (Monday.com, etc.)
+**Status values:** `processing` | `ready` | `pursuing` | `deferred`
 
 ---
 
 ## AI Agent Context
 
-The AI agent in this app should know:
+The AI agent evaluates ideas through this lens:
 
 - **User:** Adam Amzalag, COO of Wicked Cushions
 - **Constraints:** Very time-constrained, 3 kids under 3
 - **Skills:** Highly technical but not an engineer
 - **Preference:** Practical over perfect, values efficiency
 
-This shapes how it evaluates ideas - big time commitments aren't realistic unless the user explicitly says otherwise.
+This shapes analysis - big time commitments aren't realistic unless explicitly stated.
 
 ---
 
 ## Key Design Decisions
 
-1. **Fire-and-forget capture** - User closes app immediately after recording, everything else is background
-2. **Living analysis** - Chat insights push back into structured output, not just conversation history
-3. **Personalized by default** - Agent knows user's constraints, but configurable per-idea
-4. **Phone-first** - PWA designed for mobile, works on desktop too
-5. **Replit infrastructure** - Use Replit's managed services, Claude Code for development
+1. **Fire-and-forget capture** - User closes app after recording, everything else is background
+2. **Living analysis** - Chat insights push back into structured analysis
+3. **Personalized by default** - Agent knows user's constraints
+4. **Phone-first** - PWA designed for mobile, works on desktop
+5. **Single user for now** - Multi-user architecture exists but auth is Phase 4
 
 ---
 
 ## Commands
 
 ```bash
-# Local development (after Replit import)
-npm install
-npm run dev
+# Development
+npm run dev          # Vite dev server (frontend)
+npm run server       # Express server
+npm run typecheck    # TypeScript check
 
-# Build for production
-npm run build
+# Production
+npm run build        # Build frontend
+npm run start        # Build + start server (port 5000)
 
-# Database migrations
-npm run db:migrate
+# Database
+npm run db:generate  # Generate migration from schema
+npm run db:migrate   # Apply migrations
+npm run db:studio    # Drizzle Studio UI
 ```
 
 ---
 
-*Last updated: January 10, 2026*
+## Documentation Maintenance
+
+**After any code changes, update:**
+
+1. `docs/CHANGELOG.md` - Add entry for the change
+2. `CLAUDE.md` - Update if tech stack, structure, or status changes
+3. Relevant doc files if APIs, setup, or architecture changes
+
+**Source of truth for current state:** `docs/CHANGELOG.md`
+
+---
+
+*Last updated: January 14, 2026*

@@ -21,10 +21,12 @@ Common issues and solutions.
 **Symptoms:** "Invalid API key", AI features not working
 
 **Solutions:**
-1. Check ANTHROPIC_API_KEY in Replit Secrets
-2. Verify the key starts with `sk-ant-`
-3. Ensure API key has credits/quota remaining
-4. Try generating a new key at console.anthropic.com
+1. Check OPENROUTER_API_KEY in Replit Secrets (for Claude AI)
+2. Check OPENAI_API_KEY in Replit Secrets (for Whisper transcription)
+3. Verify OpenRouter key starts with `sk-or-`
+4. Verify OpenAI key starts with `sk-`
+5. Ensure API keys have credits/quota remaining
+6. Get keys from: openrouter.ai (Claude) or platform.openai.com (Whisper)
 
 ### Build Failures
 
@@ -46,9 +48,9 @@ Common issues and solutions.
 
 **Solutions:**
 1. Check browser permissions (allow microphone access)
-2. On iOS: Use Safari (Chrome has limited Web Speech API support)
-3. Ensure HTTPS (required for microphone access)
-4. Test microphone in another app
+2. Ensure HTTPS (required for microphone access)
+3. Test microphone in another app
+4. Try closing other apps using the microphone
 
 ### Poor Transcription Quality
 
@@ -58,16 +60,16 @@ Common issues and solutions.
 1. Speak clearly and at moderate pace
 2. Reduce background noise
 3. Check microphone quality
-4. Web Speech API has limitations - this is a browser constraint
+4. Whisper API is generally accurate - if issues persist, check audio is recording properly
 
 ### Recording Stops Early
 
 **Symptoms:** Recording ends before you finish speaking
 
 **Solutions:**
-1. Try tap-to-start/tap-to-stop mode instead of auto-stop
-2. Speak without long pauses
-3. Check browser isn't throttling in background
+1. Release the record button only after finishing
+2. Check browser isn't throttling in background
+3. Ensure stable network connection (audio uploads to Whisper API)
 
 ---
 
@@ -182,4 +184,4 @@ If issues persist:
 
 ---
 
-*Last updated: January 10, 2026*
+*Last updated: January 14, 2026*

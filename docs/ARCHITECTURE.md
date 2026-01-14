@@ -24,8 +24,8 @@ IdeaFlow is a phone-first PWA with a React frontend, Express backend, and Postgr
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │              Express Backend (Node.js)               │   │
 │  │  - REST API                                         │   │
-│  │  - Replit Auth                                      │   │
-│  │  - Background Job Processing                        │   │
+│  │  - Default User (Replit Auth planned Phase 4)       │   │
+│  │  - Inline Analysis Generation                       │   │
 │  │  - AI Agent Orchestration                           │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                              │                              │
@@ -201,8 +201,10 @@ src/server/
 | id | uuid | Primary key |
 | user_id | uuid | Foreign key |
 | raw_input | text | Original text/transcript |
+| title | text | AI-generated title or truncated rawInput |
 | audio_url | string | Optional, if voice recorded |
 | status | enum | processing, ready, pursuing, deferred |
+| analysis_viewed_at | timestamp | null = unread, set when viewed |
 | created_at | timestamp | |
 | updated_at | timestamp | |
 | status_changed_at | timestamp | |
@@ -226,9 +228,13 @@ src/server/
 
 ## Security
 
-- All API routes require Replit Auth
+**Current (v0.4.x):**
+- Using hardcoded default user (single-user mode)
 - Database credentials via Replit Secrets
 - HTTPS enforced by Replit
+
+**Planned (Phase 4):**
+- All API routes will require Replit Auth
 - User can only access their own ideas
 
 ## Performance Considerations

@@ -2,11 +2,13 @@
 
 ## Base URL
 
-Production: `https://ideaflow.replit.app/api` (TBD)
+Production: Your Replit URL + `/api` (e.g., `https://your-repl.replit.dev/api`)
 
 ## Authentication
 
-All endpoints require Replit Auth. The user is identified via Replit's authentication headers.
+**Current (v0.4.x):** Using hardcoded default user. No auth headers required.
+
+**Planned (Phase 4):** Replit Auth will be required.
 
 ---
 
@@ -126,18 +128,21 @@ PATCH /api/ideas/:id/status
 }
 ```
 
-### Delete Idea
+### Mark Idea as Viewed
 
 ```
-DELETE /api/ideas/:id
+PATCH /api/ideas/:id/viewed
 ```
 
 **Response:**
 ```json
 {
-  "success": true
+  "id": "uuid",
+  "analysisViewedAt": "2026-01-10T12:10:00Z"
 }
 ```
+
+*Note: DELETE /api/ideas/:id is planned but not yet implemented*
 
 ---
 
@@ -188,9 +193,50 @@ GET /api/ideas/:id/chat
 }
 ```
 
+### Regenerate Analysis
+
+```
+POST /api/ideas/:id/analyze
+```
+
+Regenerates the analysis incorporating chat conversation insights.
+
+**Response:**
+```json
+{
+  "success": true,
+  "title": "Updated title",
+  "analysis": {
+    "version": 3,
+    "content": "Updated markdown analysis..."
+  }
+}
+```
+
 ---
 
-## User
+## Transcription
+
+### Transcribe Audio
+
+```
+POST /api/transcribe
+```
+
+**Body:** `multipart/form-data` with `audio` file
+
+**Response:**
+```json
+{
+  "transcript": "Transcribed text from audio"
+}
+```
+
+Uses OpenAI Whisper API.
+
+---
+
+## User (Planned - Not Yet Implemented)
 
 ### Get Profile
 
@@ -248,4 +294,4 @@ All errors follow this format:
 
 ---
 
-*Last updated: January 10, 2026*
+*Last updated: January 14, 2026*

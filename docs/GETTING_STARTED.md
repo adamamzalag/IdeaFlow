@@ -4,7 +4,8 @@
 
 - GitHub account
 - Replit account
-- OpenRouter API key (for Claude Sonnet)
+- OpenRouter API key (for Claude Sonnet AI)
+- OpenAI API key (for Whisper transcription)
 
 ## Initial Setup
 
@@ -22,7 +23,8 @@ In Replit, go to "Secrets" (lock icon) and add:
 
 | Key | Value | Notes |
 |-----|-------|-------|
-| OPENROUTER_API_KEY | sk-or-... | Your OpenRouter API key (for Claude Sonnet) |
+| OPENROUTER_API_KEY | sk-or-... | For Claude Sonnet AI (openrouter.ai) |
+| OPENAI_API_KEY | sk-... | For Whisper transcription (platform.openai.com) |
 | DATABASE_URL | (auto-provided) | Replit provides this when you add PostgreSQL |
 
 ### 3. Add PostgreSQL Database
@@ -71,6 +73,7 @@ npm install
 Create `.env` file:
 ```
 OPENROUTER_API_KEY=sk-or-...
+OPENAI_API_KEY=sk-...
 DATABASE_URL=postgresql://localhost:5432/ideaflow
 ```
 
