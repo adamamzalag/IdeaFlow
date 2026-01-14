@@ -4,7 +4,6 @@ import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle } f
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Idea, Message } from '../lib/types'
-import { mockMessages } from '../lib/mock-data'
 
 type DetailTab = 'analysis' | 'chat'
 
@@ -17,9 +16,7 @@ interface IdeaDetailPageProps {
 export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>('analysis')
   const [showTranscript, setShowTranscript] = useState(false)
-  const [messages, setMessages] = useState<Message[]>(
-    idea.id === '1' ? mockMessages : []
-  )
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState('')
   const [hasNewAnalysis, setHasNewAnalysis] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
