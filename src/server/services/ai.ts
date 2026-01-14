@@ -43,21 +43,25 @@ You are helping analyze and develop a new idea. The user has just captured a raw
 
 First, generate a short title (5-10 words max) that captures the essence of this idea. The title should be clear and descriptive, not the raw input text.
 
-Then provide a thoughtful analysis in freeform markdown. Don't use rigid sections or templates - write naturally, covering whatever aspects are most relevant to THIS specific idea. You might touch on:
-- What the core concept seems to be
-- Why it might be valuable or interesting
-- Potential challenges or considerations
-- Questions worth exploring
-- Connections to Adam's context (e-commerce, limited time, etc.)
-- Rough sense of effort/complexity if relevant
+Then provide a well-structured analysis in markdown. The analysis should help Adam quickly understand:
+- **What this idea is really about** - clarify the core concept
+- **Whether it's worth pursuing** - be honest about potential and pitfalls
+- **Key considerations** - challenges, dependencies, unknowns
+- **Next steps** - practical actions to move forward (if relevant)
 
-Write conversationally but substantively. Be honest - if an idea seems half-baked, say so constructively. If it seems promising, explain why. The goal is to help Adam think through the idea, not to fill out a form.
+Use markdown formatting to keep it organized and scannable:
+- Use ## headers to organize main sections (adapt sections to fit the idea)
+- Use bullet points for lists
+- Use **bold** for key insights or important points
+- Use tables if comparing options or listing tradeoffs
+
+Be honest about unknowns or things that need clarification. If an idea seems half-baked, say so constructively. If it seems promising, explain why. Stay concise but substantive - quality over quantity. Connect to Adam's real constraints (time, resources, skills).
 
 Format your response EXACTLY like this:
 TITLE: [your short title here]
 
 ANALYSIS:
-[your analysis here]`
+[your well-structured markdown analysis here]`
 
   const response = await openrouter.chat.completions.create({
     model: MODEL,
