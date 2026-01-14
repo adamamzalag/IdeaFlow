@@ -48,7 +48,6 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
   const [inputValue, setInputValue] = useState('')
   const [hasNewMessages, setHasNewMessages] = useState(false)
   const [isSending, setIsSending] = useState(false)
-  const [isUpdatingAnalysis, setIsUpdatingAnalysis] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
@@ -220,20 +219,15 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
     setActiveTab(tab)
   }
 
-  // Handle back navigation - regenerate analysis if there are new messages
-  const handleBack = useCallback(async () => {
+  // Handle back navigation - regenerate analysis if there are new messages (fire-and-forget)
+  const handleBack = useCallback(() => {
     if (hasNewMessages) {
-      setIsUpdatingAnalysis(true)
-      try {
-        await regenerateAnalysisFromChat(idea.id)
-        // Don't need to update local state since we're leaving
-      } catch (err) {
+      // Fire and forget - don't await, just trigger in background
+      regenerateAnalysisFromChat(idea.id).catch(err => {
         console.error('Failed to update analysis:', err)
-      } finally {
-        setIsUpdatingAnalysis(false)
-      }
+      })
     }
-    onBack()
+    onBack() // Navigate immediately
   }, [hasNewMessages, idea.id, onBack])
 
   const statusLabel = {
@@ -254,8 +248,8 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
       {/* Header */}
       <header className="detail-header">
         <div className="detail-header-top">
-          <button className="detail-back" onClick={handleBack} disabled={isUpdatingAnalysis}>
-            {isUpdatingAnalysis ? <Loader2 size={18} className="spin" /> : <ArrowLeft size={18} />}
+          <button className="detail-back" onClick={handleBack}>
+            <ArrowLeft size={18} />
           </button>
           <div className="detail-title-area">
             <div className="detail-status">{statusLabel[idea.status]}</div>
