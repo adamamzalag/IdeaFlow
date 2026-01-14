@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion'
-import { Settings, Sparkles, ChevronRight, Lightbulb } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Settings, Sparkles, ChevronRight, Lightbulb, Mic, X, Play, Pencil, Check } from 'lucide-react'
 import type { Idea, TabType } from '../lib/types'
 
 interface HomePageProps {
@@ -7,7 +8,7 @@ interface HomePageProps {
   activeTab: TabType
   onTabChange: (tab: TabType) => void
   onSelectIdea: (idea: Idea) => void
-  onOpenCapture: () => void
+  onCapture: (input: string, isVoice: boolean) => Promise<void>
 }
 
 export function HomePage({
@@ -15,8 +16,33 @@ export function HomePage({
   activeTab,
   onTabChange,
   onSelectIdea,
-  onOpenCapture
+  onCapture
 }: HomePageProps) {
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false)
+  const [showReviewScreen, setShowReviewScreen] = useState(false)
+  const [transcript, setTranscript] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Refs for recording
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const recordingStreamRef = useRef<MediaStream | null>(null)
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop()
+      }
+      if (recordingStreamRef.current) {
+        recordingStreamRef.current.getTracks().forEach(t => t.stop())
+      }
+    }
+  }, [])
+
   const filteredIdeas = ideas.filter(idea => {
     if (activeTab === 'active') return idea.status === 'processing' || idea.status === 'ready'
     if (activeTab === 'pursuing') return idea.status === 'pursuing'
@@ -28,6 +54,115 @@ export function HomePage({
     active: ideas.filter(i => i.status === 'processing' || i.status === 'ready').length,
     pursuing: ideas.filter(i => i.status === 'pursuing').length,
     deferred: ideas.filter(i => i.status === 'deferred').length
+  }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      recordingStreamRef.current = stream
+      const recorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      })
+      audioChunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+
+      recorder.onstop = async () => {
+        // Stop stream tracks
+        if (recordingStreamRef.current) {
+          recordingStreamRef.current.getTracks().forEach(t => t.stop())
+          recordingStreamRef.current = null
+        }
+
+        // Create blob and transcribe
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType
+        })
+
+        setIsTranscribing(true)
+        try {
+          const formData = new FormData()
+          formData.append('audio', audioBlob, 'recording.webm')
+
+          const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (!response.ok) {
+            throw new Error('Transcription failed')
+          }
+
+          const data = await response.json()
+          // Append to existing transcript with space
+          setTranscript(prev => prev ? `${prev} ${data.transcript}` : data.transcript)
+          setShowReviewScreen(true)
+        } catch (error) {
+          console.error('Transcription error:', error)
+          alert('Failed to transcribe audio. Please try again.')
+        } finally {
+          setIsTranscribing(false)
+        }
+      }
+
+      mediaRecorderRef.current = recorder
+      recorder.start()
+      setIsRecording(true)
+    } catch (err) {
+      console.error('Failed to start recording:', err)
+      alert('Could not access microphone. Please allow microphone access and try again.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+    }
+  }
+
+  const handleCaptureClick = () => {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      startRecording()
+    }
+  }
+
+  const handleContinue = () => {
+    setShowReviewScreen(false)
+    setIsEditing(false)
+    // Start recording again after a brief delay
+    setTimeout(() => startRecording(), 100)
+  }
+
+  const handleEdit = () => {
+    setIsEditing(!isEditing)
+  }
+
+  const handleSave = async () => {
+    if (!transcript.trim()) return
+
+    setIsSaving(true)
+    try {
+      await onCapture(transcript.trim(), true)
+      // Reset all state on successful save
+      setTranscript('')
+      setShowReviewScreen(false)
+      setIsEditing(false)
+    } catch (err) {
+      alert('Failed to save idea. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setTranscript('')
+    setShowReviewScreen(false)
+    setIsEditing(false)
   }
 
   return (
@@ -94,16 +229,105 @@ export function HomePage({
         )}
       </main>
 
+      {/* Capture FAB - transforms when recording */}
       <div className="capture-fab-container">
         <motion.button
-          className="capture-fab"
-          onClick={onOpenCapture}
+          className={`capture-fab ${isRecording ? 'recording' : ''} ${isTranscribing ? 'transcribing' : ''}`}
+          onClick={handleCaptureClick}
           whileTap={{ scale: 0.95 }}
+          disabled={isTranscribing}
         >
-          <Sparkles className="capture-fab-icon" />
-          <span className="capture-fab-text">Capture Idea</span>
+          {isTranscribing ? (
+            <>
+              <div className="capture-fab-spinner" />
+              <span className="capture-fab-text">Transcribing...</span>
+            </>
+          ) : isRecording ? (
+            <>
+              <Mic className="capture-fab-icon" />
+              <span className="capture-fab-text">Tap to Stop</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="capture-fab-icon" />
+              <span className="capture-fab-text">Capture Idea</span>
+            </>
+          )}
         </motion.button>
       </div>
+
+      {/* Review Screen Overlay */}
+      <AnimatePresence>
+        {showReviewScreen && (
+          <motion.div
+            className="review-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="review-screen"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            >
+              <div className="review-header">
+                <h2 className="review-title">Your Idea</h2>
+                <button className="review-close" onClick={handleCancel}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="review-content">
+                {isEditing ? (
+                  <textarea
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    className="review-textarea"
+                    autoFocus
+                  />
+                ) : (
+                  <p className="review-transcript">{transcript}</p>
+                )}
+              </div>
+
+              <div className="review-actions">
+                <button
+                  className="review-action-btn secondary"
+                  onClick={handleContinue}
+                  disabled={isSaving}
+                >
+                  <Play size={18} />
+                  <span>Continue</span>
+                </button>
+                <button
+                  className="review-action-btn secondary"
+                  onClick={handleEdit}
+                  disabled={isSaving}
+                >
+                  {isEditing ? <Check size={18} /> : <Pencil size={18} />}
+                  <span>{isEditing ? 'Done' : 'Edit'}</span>
+                </button>
+                <button
+                  className="review-action-btn primary"
+                  onClick={handleSave}
+                  disabled={!transcript.trim() || isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="btn-spinner" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

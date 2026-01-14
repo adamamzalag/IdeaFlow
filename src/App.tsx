@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
-import { AnimatePresence } from 'framer-motion'
 import { HomePage } from './pages/HomePage'
 import { IdeaDetailPage } from './pages/IdeaDetailPage'
-import { CaptureModal } from './components/CaptureModal'
 import { getIdeas, getIdea, createIdea, updateIdeaStatus } from './lib/api'
 import type { Idea, IdeaStatus, TabType } from './lib/types'
 
@@ -11,7 +9,6 @@ type View = 'home' | 'detail'
 export default function App() {
   const [view, setView] = useState<View>('home')
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null)
-  const [showCapture, setShowCapture] = useState(false)
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [activeTab, setActiveTab] = useState<TabType>('active')
   const [loading, setLoading] = useState(true)
@@ -58,14 +55,8 @@ export default function App() {
   }
 
   const handleCapture = async (input: string, isVoice: boolean) => {
-    try {
-      const newIdea = await createIdea(input, isVoice)
-      setIdeas(prev => [newIdea, ...prev])
-      setShowCapture(false)
-    } catch (err) {
-      alert('Failed to save idea. Please try again.')
-      console.error(err)
-    }
+    const newIdea = await createIdea(input, isVoice)
+    setIdeas(prev => [newIdea, ...prev])
   }
 
   const handleStatusChange = async (id: string, newStatus: IdeaStatus) => {
@@ -97,7 +88,7 @@ export default function App() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onSelectIdea={handleSelectIdea}
-          onOpenCapture={() => setShowCapture(true)}
+          onCapture={handleCapture}
         />
       )}
 
@@ -108,15 +99,6 @@ export default function App() {
           onStatusChange={handleStatusChange}
         />
       )}
-
-      <AnimatePresence>
-        {showCapture && (
-          <CaptureModal
-            onClose={() => setShowCapture(false)}
-            onCapture={handleCapture}
-          />
-        )}
-      </AnimatePresence>
     </div>
   )
 }
