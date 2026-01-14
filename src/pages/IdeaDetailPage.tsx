@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle, Loader2, X, Eye } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle, Loader2, X, Eye, Mic } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Idea, Message } from '../lib/types'
@@ -51,6 +51,10 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
   const [isUpdatingAnalysis, setIsUpdatingAnalysis] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(true)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const keyboardOffset = useKeyboardOffset()
 
@@ -119,6 +123,73 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
+    }
+  }
+
+  // Voice recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      audioChunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data)
+        }
+      }
+
+      recorder.onstop = async () => {
+        setIsTranscribing(true)
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+          const formData = new FormData()
+          formData.append('audio', audioBlob, 'recording.webm')
+
+          const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (!response.ok) {
+            throw new Error('Transcription failed')
+          }
+
+          const { transcript } = await response.json()
+          // Append to existing input (don't replace)
+          setInputValue(prev => prev ? `${prev} ${transcript}` : transcript)
+        } catch (err) {
+          console.error('Transcription error:', err)
+          alert('Failed to transcribe audio. Please try again.')
+        } finally {
+          setIsTranscribing(false)
+        }
+
+        // Stop all audio tracks
+        stream.getTracks().forEach(t => t.stop())
+      }
+
+      recorder.start()
+      setMediaRecorder(recorder)
+      setIsRecording(true)
+    } catch (err) {
+      console.error('Failed to start recording:', err)
+      alert('Could not access microphone. Please check permissions.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop()
+      setIsRecording(false)
+    }
+  }
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      startRecording()
     }
   }
 
@@ -259,6 +330,18 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
         {activeTab === 'chat' && (
           <div className="chat-input-section">
             <div className="chat-input-wrapper">
+              <button
+                className={`chat-mic-btn ${isRecording ? 'recording' : ''}`}
+                onClick={toggleRecording}
+                disabled={isSending || isTranscribing}
+                title={isRecording ? 'Stop recording' : 'Start voice input'}
+              >
+                {isTranscribing ? (
+                  <Loader2 size={20} className="spin" />
+                ) : (
+                  <Mic size={20} />
+                )}
+              </button>
               <textarea
                 className="chat-input"
                 placeholder="Ask a question..."

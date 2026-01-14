@@ -1258,6 +1258,51 @@
   height: 16px;
 }
 
+/* Chat Mic Button - Voice Input */
+.chat-mic-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.chat-mic-btn:hover:not(:disabled) {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface);
+}
+
+.chat-mic-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chat-mic-btn.recording {
+  color: var(--color-error, #ff6b6b);
+  animation: mic-pulse-glow 1s infinite;
+}
+
+@keyframes mic-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 100, 100, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 12px 4px rgba(255, 100, 100, 0.4);
+  }
+}
+
+.chat-mic-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* Action Buttons - Inside Bottom Bar */
 .detail-footer-actions {
   display: flex;
