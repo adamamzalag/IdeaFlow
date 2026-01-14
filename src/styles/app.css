@@ -1345,3 +1345,103 @@
 .animate-slide-up {
   animation: slideUp var(--duration-slow) var(--ease-out);
 }
+
+/* ============================================
+   VIEW ANALYSIS BUTTON & MODAL
+   ============================================ */
+
+/* View Analysis Button - Shown in chat view */
+.view-analysis-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  align-self: flex-start;
+}
+
+.view-analysis-btn:hover {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-default);
+}
+
+.view-analysis-btn svg {
+  opacity: 0.7;
+}
+
+/* Analysis Modal Overlay */
+.analysis-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+/* Analysis Modal */
+.analysis-modal {
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  background: var(--color-bg-base);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.analysis-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--page-padding);
+  border-bottom: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.analysis-modal-header h3 {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.analysis-modal-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elevated);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.analysis-modal-close:hover {
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.analysis-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4) var(--page-padding);
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+}

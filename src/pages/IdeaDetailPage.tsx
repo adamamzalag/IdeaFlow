@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle, Loader2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Send, Check, Clock, FileText, MessageCircle, Loader2, X, Eye } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Idea, Message } from '../lib/types'
-import { getChatMessages, sendChatMessage, regenerateAnalysisFromChat, markIdeaViewed, getIdea } from '../lib/api'
+import { getChatMessages, sendChatMessage, regenerateAnalysisFromChat, markIdeaViewed } from '../lib/api'
 
 type DetailTab = 'analysis' | 'chat'
 
@@ -41,7 +41,7 @@ function useKeyboardOffset() {
 }
 
 export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: IdeaDetailPageProps) {
-  const [idea, setIdea] = useState<Idea>(initialIdea)
+  const [idea] = useState<Idea>(initialIdea)
   const [activeTab, setActiveTab] = useState<DetailTab>('analysis')
   const [showTranscript, setShowTranscript] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -50,8 +50,8 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
   const [isSending, setIsSending] = useState(false)
   const [isUpdatingAnalysis, setIsUpdatingAnalysis] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(true)
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const previousTab = useRef<DetailTab>('analysis')
   const keyboardOffset = useKeyboardOffset()
 
   const scrollToBottom = () => {
@@ -122,29 +122,26 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
     }
   }
 
-  const handleTabChange = async (tab: DetailTab) => {
-    const wasOnChat = previousTab.current === 'chat'
-    previousTab.current = tab
+  // Simple tab change - no regeneration on tab switch
+  const handleTabChange = (tab: DetailTab) => {
     setActiveTab(tab)
+  }
 
-    // When switching FROM Chat TO Analysis, check if we need to regenerate
-    if (wasOnChat && tab === 'analysis' && hasNewMessages) {
+  // Handle back navigation - regenerate analysis if there are new messages
+  const handleBack = useCallback(async () => {
+    if (hasNewMessages) {
       setIsUpdatingAnalysis(true)
       try {
-        const result = await regenerateAnalysisFromChat(idea.id)
-        if (result.updated) {
-          // Re-fetch the idea to get the updated analysis
-          const updatedIdea = await getIdea(idea.id)
-          setIdea(updatedIdea)
-        }
-        setHasNewMessages(false)
+        await regenerateAnalysisFromChat(idea.id)
+        // Don't need to update local state since we're leaving
       } catch (err) {
         console.error('Failed to update analysis:', err)
       } finally {
         setIsUpdatingAnalysis(false)
       }
     }
-  }
+    onBack()
+  }, [hasNewMessages, idea.id, onBack])
 
   const statusLabel = {
     processing: 'Processing',
@@ -164,8 +161,8 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
       {/* Header */}
       <header className="detail-header">
         <div className="detail-header-top">
-          <button className="detail-back" onClick={onBack}>
-            <ArrowLeft size={18} />
+          <button className="detail-back" onClick={handleBack} disabled={isUpdatingAnalysis}>
+            {isUpdatingAnalysis ? <Loader2 size={18} className="spin" /> : <ArrowLeft size={18} />}
           </button>
           <div className="detail-title-area">
             <div className="detail-status">{statusLabel[idea.status]}</div>
@@ -179,14 +176,10 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
             className={`detail-tab ${activeTab === 'analysis' ? 'active' : ''}`}
             onClick={() => handleTabChange('analysis')}
           >
-            {isUpdatingAnalysis ? (
-              <Loader2 size={16} className="spin" />
-            ) : (
-              <FileText size={16} />
-            )}
-            {isUpdatingAnalysis ? 'Updating...' : 'Analysis'}
-            {hasNewMessages && activeTab !== 'analysis' && !isUpdatingAnalysis && (
-              <span className="detail-tab-badge" />
+            <FileText size={16} />
+            Analysis
+            {hasNewMessages && (
+              <span className="detail-tab-badge" title="Analysis will update when you leave" />
             )}
           </button>
           <button
@@ -234,6 +227,16 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
               transition={{ duration: 0.2 }}
               className="chat-view"
             >
+              {/* View Analysis Button - Quick access while chatting */}
+              {idea.analysis && (
+                <button
+                  className="view-analysis-btn"
+                  onClick={() => setShowAnalysisModal(true)}
+                >
+                  <Eye size={14} />
+                  View Analysis
+                </button>
+              )}
               <ChatMessagesView
                 messages={messages}
                 messagesEndRef={messagesEndRef}
@@ -296,6 +299,44 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
           </div>
         )}
       </div>
+
+      {/* Analysis Modal - View analysis while in chat */}
+      <AnimatePresence>
+        {showAnalysisModal && idea.analysis && (
+          <motion.div
+            className="analysis-modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setShowAnalysisModal(false)}
+          >
+            <motion.div
+              className="analysis-modal"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="analysis-modal-header">
+                <h3>Analysis</h3>
+                <button
+                  className="analysis-modal-close"
+                  onClick={() => setShowAnalysisModal(false)}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="analysis-modal-content markdown-content">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {idea.analysis.content}
+                </ReactMarkdown>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
