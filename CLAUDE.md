@@ -30,7 +30,7 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 - **DO NOT** use Replit Agent for coding - use Claude Code
 - **DO** use Replit for all infrastructure (hosting, DB, auth, secrets)
 - **ALWAYS** push to GitHub before testing on Replit
-- Replit secrets should store: `ANTHROPIC_API_KEY`, `DATABASE_URL` (auto-provided by Replit)
+- Replit secrets should store: `OPENROUTER_API_KEY`, `OPENAI_API_KEY` (for Whisper), `DATABASE_URL` (auto-provided by Replit)
 
 ---
 
@@ -42,7 +42,7 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 | Backend | Node.js/Express |
 | Database | PostgreSQL (Replit) |
 | Auth | Replit Auth |
-| AI | Claude API |
+| AI | Claude Sonnet (via OpenRouter) |
 | Voice | Web Speech API |
 | Hosting | Replit |
 

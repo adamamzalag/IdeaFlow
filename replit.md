@@ -68,8 +68,8 @@ Preferred communication style: Simple, everyday language.
 ## External Dependencies
 
 ### AI Integration
-- **Claude API (Anthropic)** - Powers idea analysis and chat functionality
-- Requires `ANTHROPIC_API_KEY` in environment secrets
+- **Claude Sonnet (via OpenRouter)** - Powers idea analysis and chat functionality
+- Requires `OPENROUTER_API_KEY` in environment secrets
 
 ### Database
 - **PostgreSQL** - Primary data store, provisioned through Replit

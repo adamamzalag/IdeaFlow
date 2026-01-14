@@ -111,7 +111,7 @@ Common issues and solutions.
 **Symptoms:** Ideas never move to "Ready"
 
 **Solutions:**
-1. Check Anthropic API key is valid
+1. Check OpenRouter API key is valid
 2. Check Replit logs for errors
 3. Verify background job is running
 4. Check API quota/credits
@@ -178,7 +178,7 @@ If issues persist:
 1. Check Replit console for detailed error logs
 2. Review recent changes that might have caused the issue
 3. Check if the issue is browser-specific (try another browser)
-4. For AI issues, check Anthropic status page
+4. For AI issues, check OpenRouter status page
 
 ---
 

@@ -65,7 +65,7 @@ The app now has full data persistence. Ideas are stored in PostgreSQL and surviv
    - Context from idea and analysis
 
 ### Environment Variables Needed
-- `ANTHROPIC_API_KEY` - For Claude API
+- `OPENROUTER_API_KEY` - For Claude Sonnet via OpenRouter
 
 ---
 
@@ -122,7 +122,7 @@ src/
 |----------|---------|--------|
 | `DATABASE_URL` | PostgreSQL connection | **Required** |
 | `OPENAI_API_KEY` | Whisper transcription | **Required** |
-| `ANTHROPIC_API_KEY` | Claude AI | Needed for Phase 3 |
+| `OPENROUTER_API_KEY` | Claude Sonnet via OpenRouter | Needed for Phase 3 |
 
 ---
 

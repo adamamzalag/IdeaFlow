@@ -4,7 +4,7 @@
 
 - GitHub account
 - Replit account
-- Anthropic API key (for Claude)
+- OpenRouter API key (for Claude Sonnet)
 
 ## Initial Setup
 
@@ -22,7 +22,7 @@ In Replit, go to "Secrets" (lock icon) and add:
 
 | Key | Value | Notes |
 |-----|-------|-------|
-| ANTHROPIC_API_KEY | sk-ant-... | Your Claude API key |
+| OPENROUTER_API_KEY | sk-or-... | Your OpenRouter API key (for Claude Sonnet) |
 | DATABASE_URL | (auto-provided) | Replit provides this when you add PostgreSQL |
 
 ### 3. Add PostgreSQL Database
@@ -70,7 +70,7 @@ npm install
 
 Create `.env` file:
 ```
-ANTHROPIC_API_KEY=sk-ant-...
+OPENROUTER_API_KEY=sk-or-...
 DATABASE_URL=postgresql://localhost:5432/ideaflow
 ```
 
@@ -118,8 +118,8 @@ The app will appear as an icon and work offline for cached content.
 - Check DATABASE_URL is set in Replit Secrets
 - Ensure PostgreSQL is provisioned in Replit
 
-### "Anthropic API error"
-- Verify ANTHROPIC_API_KEY is correct in Secrets
+### "OpenRouter API error"
+- Verify OPENROUTER_API_KEY is correct in Secrets
 - Check API key has sufficient credits
 
 ### "App not updating after push"
