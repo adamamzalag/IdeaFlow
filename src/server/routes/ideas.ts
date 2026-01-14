@@ -6,6 +6,12 @@ import { getDefaultUserId } from '../utils/ensureDefaultUser'
 
 const router = Router()
 
+// UUID validation helper
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
 // Valid status values
 const validStatuses = ['processing', 'ready', 'pursuing', 'deferred'] as const
 type IdeaStatus = typeof validStatuses[number]
@@ -84,6 +90,11 @@ router.patch('/ideas/:id/status', async (req, res) => {
     const { id } = req.params
     const { status } = req.body
 
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Invalid idea ID format' })
+    }
+
     // Validate status
     if (!status || !validStatuses.includes(status as IdeaStatus)) {
       return res.status(400).json({
@@ -123,6 +134,12 @@ router.patch('/ideas/:id/status', async (req, res) => {
 router.get('/ideas/:id', async (req, res) => {
   try {
     const { id } = req.params
+
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return res.status(400).json({ error: 'Invalid idea ID format' })
+    }
+
     const userId = getDefaultUserId()
 
     // Get the idea
