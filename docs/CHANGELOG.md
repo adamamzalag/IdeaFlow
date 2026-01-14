@@ -6,11 +6,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Known Issue - CSS Overflow (Issue B)
-- Detail page has layout overflow issues when viewing ideas without analysis
-- Elements (header, tabs, content) extend beyond viewport to the right
-- Adding `overflow-x: hidden` masks the problem but doesn't fix it
-- See `docs/plans/2026-01-14-round2-fixes.md` for investigation notes
+*No known issues*
+
+---
+
+## v0.4.1 - Bug Fixes (January 14, 2026)
+
+### Fixed
+- **Issue B: CSS Layout Overflow** (RESOLVED)
+  - Root cause: `max-width` without explicit `width` allowed content to expand page beyond viewport
+  - Added `width: 100%` to `.detail-page` and `.detail-header`
+  - Changed `100vw` to `100%` on html/body (100vw includes scrollbar width)
+  - Removed x-transform from detail page animation
+  - Long titles now properly truncate with ellipsis
+
+- **Keyboard Scroll Void on Android**
+  - Added `interactive-widget=resizes-content` to viewport meta tag
+  - Prevents scrolling into empty black space when keyboard opens
 
 ---
 
@@ -174,16 +186,14 @@ All notable changes to this project will be documented in this file.
 
 ## Roadmap
 
-### Next Up - CSS Overflow Fix (Issue B)
-- Debug why layout breaks on ideas without analysis
-- Investigate flex behavior when content area is empty
-- Fix root cause (not just hide with overflow-x: hidden)
-
-### Phase 4 - Auth & Polish
+### Phase 4 - Auth & Polish (Next)
 - Replit Auth integration
-- PWA features
+- PWA features (installable, offline support)
 - UX polish (toasts, loading states)
 - Animation polish pass
+
+### Deferred
+- Issue D: Browser swipe-back gesture (needs routing/history management)
 
 ---
 

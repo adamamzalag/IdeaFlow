@@ -1,7 +1,7 @@
 # Round 2 Fixes - Status Update
 
 **Date:** January 14, 2026
-**Status:** Issues A & C FIXED, Issue B PENDING INVESTIGATION
+**Status:** ALL ISSUES FIXED ✓
 
 ---
 
@@ -10,6 +10,16 @@
 ### Issue A: Keyboard in Review Modal - FIXED
 - Used `scrollIntoView({ behavior: 'smooth', block: 'center' })` on textarea focus
 - 300ms delay to wait for keyboard animation
+
+### Issue B: CSS Layout Overflow - FIXED
+- **Root cause:** `max-width` without explicit `width` allowed content to expand page beyond viewport
+- **Key insight:** On a ~450px viewport (Pixel 10 Pro XL), long titles could expand page toward 480px max-width, causing ~30px of content to be clipped
+- **Solution:**
+  - Added `width: 100%` to `.detail-page` and `.detail-header`
+  - Changed `100vw` to `100%` on html/body (100vw includes scrollbar width)
+  - Removed x-transform from detail page animation (was causing "restructuring" effect)
+  - Added `overflow: hidden` to `.detail-header-top`
+- **Bonus fix:** Added `interactive-widget=resizes-content` to viewport meta tag (prevents keyboard scroll void on Android)
 
 ### Issue C: Toggle Pursue/Defer Buttons - FIXED
 - Added `localStatus` state for optimistic UI updates
@@ -21,7 +31,7 @@
 
 ---
 
-## Issue B: CSS Layout Overflow - NEEDS INVESTIGATION
+## Issue B Investigation Notes (Historical)
 
 ### The Problem
 
@@ -126,8 +136,8 @@ In `app.css`, added to these selectors:
 ## Deferred Items
 
 - **Issue D** - Browser swipe back gesture (needs routing/history management)
-- **Design help for chat layout** - After Issue B is fixed
+- **Design help for chat layout** - Can proceed now that Issue B is fixed
 
 ---
 
-*Last updated: January 14, 2026*
+*Last updated: January 14, 2026 - All round 2 issues resolved*
