@@ -162,12 +162,14 @@ router.get('/ideas/:id', async (req, res) => {
       .limit(1)
 
     // Format response with analysis content
+    // Extract markdown string from content JSONB object
+    const analysisContent = latestAnalysis?.content as { markdown: string } | null
     const response = {
       ...idea,
       analysis: latestAnalysis ? {
         id: latestAnalysis.id,
         version: latestAnalysis.version,
-        content: latestAnalysis.content,
+        content: analysisContent?.markdown ?? '',
         createdAt: latestAnalysis.createdAt,
       } : null
     }
