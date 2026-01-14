@@ -44,6 +44,7 @@ export async function getIdea(id: string): Promise<Idea> {
     status: idea.status as IdeaStatus,
     createdAt: new Date(idea.createdAt),
     updatedAt: new Date(idea.updatedAt),
+    analysisViewedAt: idea.analysisViewedAt ? new Date(idea.analysisViewedAt) : null,
   }
 
   // Include analysis if present
@@ -163,7 +164,7 @@ export async function sendChatMessage(ideaId: string, message: string): Promise<
   if (!response.ok) {
     throw new Error('Failed to send chat message')
   }
-  return response.json()
+  return await response.json()
 }
 
 /**
@@ -176,5 +177,5 @@ export async function regenerateAnalysisFromChat(ideaId: string): Promise<{ upda
   if (!response.ok) {
     throw new Error('Failed to regenerate analysis')
   }
-  return response.json()
+  return await response.json()
 }
