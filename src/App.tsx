@@ -64,7 +64,8 @@ export default function App() {
       const updated = await updateIdeaStatus(id, newStatus)
       setIdeas(prev => prev.map(idea => idea.id === id ? updated : idea))
       if (selectedIdea?.id === id) {
-        setSelectedIdea(updated)
+        // Merge the updated fields while preserving analysis (which isn't returned by status update)
+        setSelectedIdea(prev => prev ? { ...prev, ...updated, analysis: prev.analysis } : updated)
       }
     } catch (err) {
       alert('Failed to update idea.')

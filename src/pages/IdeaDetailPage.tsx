@@ -400,14 +400,14 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
               onClick={() => handleStatusToggle('deferred')}
             >
               <Clock size={16} />
-              {localStatus === 'deferred' ? 'Deferred ✓' : 'Defer'}
+              {localStatus === 'deferred' ? 'Deferred' : 'Defer'}
             </button>
             <button
               className={`action-btn secondary ${localStatus === 'pursuing' ? 'active-pursue' : ''}`}
               onClick={() => handleStatusToggle('pursuing')}
             >
               <Check size={16} />
-              {localStatus === 'pursuing' ? 'Pursuing ✓' : 'Pursue'}
+              {localStatus === 'pursuing' ? 'Pursuing' : 'Pursue'}
             </button>
           </div>
         )}
