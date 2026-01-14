@@ -4,6 +4,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { transcribeRouter } from './routes/transcribe'
 import { ideasRouter } from './routes/ideas'
+import { chatRouter } from './routes/chat'
 import { ensureDefaultUser } from './utils/ensureDefaultUser'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -21,6 +22,7 @@ app.get('/api/health', (_req, res) => {
 // API Routes
 app.use('/api', transcribeRouter)
 app.use('/api', ideasRouter)
+app.use('/api', chatRouter)
 
 // Serve static files from the built frontend
 const distPath = path.join(__dirname, '../../dist')
