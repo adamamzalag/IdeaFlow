@@ -1,4 +1,4 @@
-import type { Idea, IdeaStatus, Analysis } from './types'
+import type { Idea, IdeaStatus, Analysis, Message } from './types'
 
 const API_BASE = '/api'
 
@@ -21,6 +21,7 @@ export async function getIdeas(): Promise<Idea[]> {
     status: idea.status as IdeaStatus,
     createdAt: new Date(idea.createdAt),
     updatedAt: new Date(idea.updatedAt),
+    analysisViewedAt: idea.analysisViewedAt ? new Date(idea.analysisViewedAt) : null,
   }))
 }
 
@@ -122,4 +123,58 @@ export async function updateIdeaStatus(id: string, status: IdeaStatus): Promise<
   }
 
   return result
+}
+
+/**
+ * Mark an idea as viewed
+ */
+export async function markIdeaViewed(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/ideas/${id}/viewed`, {
+    method: 'PATCH',
+  })
+  if (!response.ok) {
+    throw new Error('Failed to mark idea as viewed')
+  }
+}
+
+/**
+ * Get chat messages for an idea
+ */
+export async function getChatMessages(ideaId: string): Promise<Message[]> {
+  const response = await fetch(`${API_BASE}/ideas/${ideaId}/chat`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch chat messages')
+  }
+  const data = await response.json()
+  return data.messages || []
+}
+
+/**
+ * Send a chat message
+ */
+export async function sendChatMessage(ideaId: string, message: string): Promise<{ response: string; messages: Message[] }> {
+  const response = await fetch(`${API_BASE}/ideas/${ideaId}/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ message }),
+  })
+  if (!response.ok) {
+    throw new Error('Failed to send chat message')
+  }
+  return response.json()
+}
+
+/**
+ * Trigger analysis regeneration from chat
+ */
+export async function regenerateAnalysisFromChat(ideaId: string): Promise<{ updated: boolean; analysis?: Analysis }> {
+  const response = await fetch(`${API_BASE}/ideas/${ideaId}/analyze`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw new Error('Failed to regenerate analysis')
+  }
+  return response.json()
 }
