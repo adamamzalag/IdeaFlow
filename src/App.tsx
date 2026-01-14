@@ -45,9 +45,16 @@ export default function App() {
     }
   }
 
-  const handleBack = () => {
+  const handleBack = async () => {
     setView('home')
     setSelectedIdea(null)
+    // Refetch ideas to update viewed status (removes unread dots)
+    try {
+      const fetchedIdeas = await getIdeas()
+      setIdeas(fetchedIdeas)
+    } catch (err) {
+      console.error('Failed to refresh ideas:', err)
+    }
   }
 
   const handleCapture = async (input: string, isVoice: boolean) => {
