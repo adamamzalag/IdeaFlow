@@ -374,8 +374,8 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
           </div>
         )}
 
-        {/* Footer Actions */}
-        {(idea.status === 'ready' || idea.status === 'processing') && (
+        {/* Footer Actions - hide when keyboard is open to prevent accidental taps */}
+        {keyboardOffset === 0 && (idea.status === 'ready' || idea.status === 'processing') && (
           <div className="detail-footer-actions">
             <button
               className="action-btn secondary"
