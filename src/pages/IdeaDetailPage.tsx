@@ -35,10 +35,8 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
     if (!inputValue.trim()) return
 
     const newMessage: Message = {
-      id: String(Date.now()),
       role: 'user',
-      content: inputValue,
-      timestamp: new Date()
+      content: inputValue
     }
 
     setMessages(prev => [...prev, newMessage])
@@ -47,10 +45,8 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
     // Simulate AI response
     setTimeout(() => {
       const aiResponse: Message = {
-        id: String(Date.now() + 1),
         role: 'assistant',
-        content: "I've updated the analysis based on your input. You can switch to the Analysis tab to see the changes.",
-        timestamp: new Date()
+        content: "I've updated the analysis based on your input. You can switch to the Analysis tab to see the changes."
       }
       setMessages(prev => [...prev, aiResponse])
       setHasNewAnalysis(true)
@@ -257,9 +253,9 @@ function ChatView({ messages, inputValue, onInputChange, onSend, onKeyDown, mess
         </div>
       ) : (
         <div className="chat-messages">
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <motion.div
-              key={message.id}
+              key={index}
               className={`chat-message ${message.role}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}

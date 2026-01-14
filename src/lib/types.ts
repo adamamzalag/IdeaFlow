@@ -8,19 +8,18 @@ export interface Idea {
   status: IdeaStatus
   createdAt: Date
   updatedAt: Date
+  analysisViewedAt?: Date | null  // null = unviewed
   analysis?: Analysis
 }
 
 export interface Analysis {
   version: number
-  content: string  // Full markdown document - AI controls structure
+  content: string
 }
 
 export interface Message {
-  id: string
   role: 'user' | 'assistant'
   content: string
-  timestamp: Date
 }
 
 export type TabType = 'active' | 'pursuing' | 'deferred'
