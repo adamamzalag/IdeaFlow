@@ -827,7 +827,23 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--space-4) var(--page-padding);
+  padding-bottom: 150px; /* Space for fixed bottom bar */
   max-width: 100%;
+}
+
+/* Fixed Bottom Bar - Input + Action Buttons */
+.detail-bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  background: var(--color-bg-deep);
+  padding: var(--space-3) var(--page-padding);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border-subtle);
+  z-index: var(--z-sticky);
 }
 
 /* Transcript Section */
@@ -1176,11 +1192,9 @@
   font-size: var(--text-sm);
 }
 
-/* Chat Input */
+/* Chat Input - Now inside fixed bottom bar */
 .chat-input-section {
-  flex-shrink: 0;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border-subtle);
+  /* No extra padding/border needed - contained in detail-bottom-bar */
 }
 
 .chat-input-wrapper {
@@ -1244,15 +1258,16 @@
   height: 16px;
 }
 
-/* Action Buttons - Footer */
-.detail-footer {
-  flex-shrink: 0;
+/* Action Buttons - Inside Bottom Bar */
+.detail-footer-actions {
   display: flex;
   gap: var(--space-3);
-  padding: var(--space-3) var(--page-padding);
-  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
-  background: var(--color-bg-deep);
-  border-top: 1px solid var(--color-border-subtle);
+  margin-top: var(--space-3);
+}
+
+/* When there's no chat input above, remove extra margin */
+.detail-bottom-bar > .detail-footer-actions:first-child {
+  margin-top: 0;
 }
 
 .action-btn {

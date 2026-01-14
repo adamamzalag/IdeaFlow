@@ -14,6 +14,32 @@ interface IdeaDetailPageProps {
   onStatusChange: (ideaId: string, status: 'pursuing' | 'deferred') => void
 }
 
+// Hook to handle keyboard visibility on mobile (especially Android Chrome)
+function useKeyboardOffset() {
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
+
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+
+    const handleResize = () => {
+      // Calculate keyboard height by comparing viewport height to window height
+      const keyboardHeight = window.innerHeight - viewport.height
+      setKeyboardOffset(keyboardHeight > 0 ? keyboardHeight : 0)
+    }
+
+    viewport.addEventListener('resize', handleResize)
+    viewport.addEventListener('scroll', handleResize)
+
+    return () => {
+      viewport.removeEventListener('resize', handleResize)
+      viewport.removeEventListener('scroll', handleResize)
+    }
+  }, [])
+
+  return keyboardOffset
+}
+
 export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: IdeaDetailPageProps) {
   const [idea, setIdea] = useState<Idea>(initialIdea)
   const [activeTab, setActiveTab] = useState<DetailTab>('analysis')
@@ -26,6 +52,7 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
   const [loadingMessages, setLoadingMessages] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const previousTab = useRef<DetailTab>('analysis')
+  const keyboardOffset = useKeyboardOffset()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -207,12 +234,8 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
               transition={{ duration: 0.2 }}
               className="chat-view"
             >
-              <ChatView
+              <ChatMessagesView
                 messages={messages}
-                inputValue={inputValue}
-                onInputChange={setInputValue}
-                onSend={handleSend}
-                onKeyDown={handleKeyDown}
                 messagesEndRef={messagesEndRef}
                 isLoading={loadingMessages}
                 isSending={isSending}
@@ -222,25 +245,57 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
         </AnimatePresence>
       </div>
 
-      {/* Footer Actions */}
-      {(idea.status === 'ready' || idea.status === 'processing') && (
-        <div className="detail-footer">
-          <button
-            className="action-btn secondary"
-            onClick={() => onStatusChange(idea.id, 'deferred')}
-          >
-            <Clock size={16} />
-            Defer
-          </button>
-          <button
-            className="action-btn primary"
-            onClick={() => onStatusChange(idea.id, 'pursuing')}
-          >
-            <Check size={16} />
-            Pursue
-          </button>
-        </div>
-      )}
+      {/* Fixed Bottom Bar - Input + Action Buttons */}
+      <div
+        className="detail-bottom-bar"
+        style={{
+          transform: keyboardOffset > 0 ? `translateY(-${keyboardOffset}px)` : undefined
+        }}
+      >
+        {/* Chat Input - only shown on chat tab */}
+        {activeTab === 'chat' && (
+          <div className="chat-input-section">
+            <div className="chat-input-wrapper">
+              <textarea
+                className="chat-input"
+                placeholder="Ask a question..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                disabled={isSending}
+              />
+              <button
+                className="chat-send"
+                onClick={handleSend}
+                disabled={!inputValue.trim() || isSending}
+              >
+                {isSending ? <Loader2 size={16} className="spin" /> : <Send size={16} />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer Actions */}
+        {(idea.status === 'ready' || idea.status === 'processing') && (
+          <div className="detail-footer-actions">
+            <button
+              className="action-btn secondary"
+              onClick={() => onStatusChange(idea.id, 'deferred')}
+            >
+              <Clock size={16} />
+              Defer
+            </button>
+            <button
+              className="action-btn primary"
+              onClick={() => onStatusChange(idea.id, 'pursuing')}
+            >
+              <Check size={16} />
+              Pursue
+            </button>
+          </div>
+        )}
+      </div>
     </motion.div>
   )
 }
@@ -290,18 +345,14 @@ function AnalysisView({ idea, showTranscript, onToggleTranscript }: AnalysisView
   )
 }
 
-interface ChatViewProps {
+interface ChatMessagesViewProps {
   messages: Message[]
-  inputValue: string
-  onInputChange: (value: string) => void
-  onSend: () => void
-  onKeyDown: (e: React.KeyboardEvent) => void
   messagesEndRef: React.RefObject<HTMLDivElement>
   isLoading: boolean
   isSending: boolean
 }
 
-function ChatView({ messages, inputValue, onInputChange, onSend, onKeyDown, messagesEndRef, isLoading, isSending }: ChatViewProps) {
+function ChatMessagesView({ messages, messagesEndRef, isLoading, isSending }: ChatMessagesViewProps) {
   if (isLoading) {
     return (
       <div className="chat-empty">
@@ -311,60 +362,39 @@ function ChatView({ messages, inputValue, onInputChange, onSend, onKeyDown, mess
     )
   }
 
-  return (
-    <>
-      {messages.length === 0 ? (
-        <div className="chat-empty">
-          <MessageCircle className="chat-empty-icon" />
-          <p className="chat-empty-text">
-            Ask questions or add context to refine the analysis
-          </p>
-        </div>
-      ) : (
-        <div className="chat-messages">
-          {messages.map((message, index) => (
-            <motion.div
-              key={index}
-              className={`chat-message ${message.role}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              {message.content}
-            </motion.div>
-          ))}
-          {isSending && (
-            <motion.div
-              className="chat-message assistant"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Loader2 size={16} className="spin" style={{ display: 'inline-block' }} />
-            </motion.div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      )}
-
-      <div className="chat-input-section">
-        <div className="chat-input-wrapper">
-          <textarea
-            className="chat-input"
-            placeholder="Ask a question..."
-            value={inputValue}
-            onChange={(e) => onInputChange(e.target.value)}
-            onKeyDown={onKeyDown}
-            rows={1}
-            disabled={isSending}
-          />
-          <button
-            className="chat-send"
-            onClick={onSend}
-            disabled={!inputValue.trim() || isSending}
-          >
-            {isSending ? <Loader2 size={16} className="spin" /> : <Send size={16} />}
-          </button>
-        </div>
+  if (messages.length === 0) {
+    return (
+      <div className="chat-empty">
+        <MessageCircle className="chat-empty-icon" />
+        <p className="chat-empty-text">
+          Ask questions or add context to refine the analysis
+        </p>
       </div>
-    </>
+    )
+  }
+
+  return (
+    <div className="chat-messages">
+      {messages.map((message, index) => (
+        <motion.div
+          key={index}
+          className={`chat-message ${message.role}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          {message.content}
+        </motion.div>
+      ))}
+      {isSending && (
+        <motion.div
+          className="chat-message assistant"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Loader2 size={16} className="spin" style={{ display: 'inline-block' }} />
+        </motion.div>
+      )}
+      <div ref={messagesEndRef} />
+    </div>
   )
 }
