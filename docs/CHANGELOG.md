@@ -6,7 +6,61 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-*Nothing yet - Phase 2 complete!*
+### Known Issue - CSS Overflow (Issue B)
+- Detail page has layout overflow issues when viewing ideas without analysis
+- Elements (header, tabs, content) extend beyond viewport to the right
+- Adding `overflow-x: hidden` masks the problem but doesn't fix it
+- See `docs/plans/2026-01-14-round2-fixes.md` for investigation notes
+
+---
+
+## v0.4.0 - Phase 3 AI Integration Complete (January 14, 2026)
+
+**Milestone:** AI-powered analysis and chat working
+
+### Added
+- **Claude AI Integration** (via OpenRouter)
+  - Initial analysis generation with AI-generated titles
+  - Chat functionality for exploring ideas
+  - Analysis regeneration based on chat conversation
+  - Background processing (non-blocking)
+
+- **Voice Input in Chat**
+  - Mic button in chat input
+  - MediaRecorder + Whisper transcription
+  - Appends to existing input
+
+- **Simplified Capture Flow**
+  - One-tap recording from home page
+  - Review modal with Continue/Edit/Save
+  - Continue recording within modal
+
+- **View Analysis Modal**
+  - Quick access to analysis while in chat tab
+  - Scrollable overlay
+
+- **Unread Indicator**
+  - Coral dot on idea cards with unviewed analysis
+  - `analysisViewedAt` tracking in database
+
+### Changed
+- Bottom bar is now fixed position (sticky)
+- Keyboard detection hides Pursue/Defer buttons
+- Chat input auto-expands as user types
+- Back button is non-blocking (analysis updates in background)
+
+### Fixed
+- **Toggle Pursue/Defer Buttons**
+  - Buttons now toggle status (click again to return to ready)
+  - Optimistic UI updates (instant feedback)
+  - Defer selected → red, Pursue selected → orange
+
+- **Analysis Preservation**
+  - Status change no longer causes analysis to disappear
+  - Merges updated fields while preserving analysis object
+
+- **Keyboard in Review Modal**
+  - Textarea scrolls into view when focused
 
 ---
 
@@ -120,10 +174,10 @@ All notable changes to this project will be documented in this file.
 
 ## Roadmap
 
-### Phase 3 - AI Integration (Next)
-- Claude API for real idea analysis
-- Chat functionality with Claude
-- Context-aware responses
+### Next Up - CSS Overflow Fix (Issue B)
+- Debug why layout breaks on ideas without analysis
+- Investigate flex behavior when content area is empty
+- Fix root cause (not just hide with overflow-x: hidden)
 
 ### Phase 4 - Auth & Polish
 - Replit Auth integration
