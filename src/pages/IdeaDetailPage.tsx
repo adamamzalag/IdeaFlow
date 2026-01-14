@@ -40,8 +40,21 @@ function useKeyboardOffset() {
   return keyboardOffset
 }
 
-export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: IdeaDetailPageProps) {
-  const [idea] = useState<Idea>(initialIdea)
+export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageProps) {
+  // Local status for optimistic UI updates (shows change immediately)
+  const [localStatus, setLocalStatus] = useState(idea.status)
+
+  // Sync local status when prop changes (e.g., from server response)
+  useEffect(() => {
+    setLocalStatus(idea.status)
+  }, [idea.status])
+
+  const handleStatusToggle = (targetStatus: 'pursuing' | 'deferred') => {
+    const newStatus = localStatus === targetStatus ? 'ready' : targetStatus
+    setLocalStatus(newStatus) // Immediate UI update
+    onStatusChange(idea.id, newStatus) // Async server update
+  }
+
   const [activeTab, setActiveTab] = useState<DetailTab>('analysis')
   const [showTranscript, setShowTranscript] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -383,18 +396,18 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
         {keyboardOffset === 0 && idea.status !== 'processing' && (
           <div className="detail-footer-actions">
             <button
-              className={`action-btn secondary ${idea.status === 'deferred' ? 'active' : ''}`}
-              onClick={() => onStatusChange(idea.id, idea.status === 'deferred' ? 'ready' : 'deferred')}
+              className={`action-btn secondary ${localStatus === 'deferred' ? 'active-defer' : ''}`}
+              onClick={() => handleStatusToggle('deferred')}
             >
               <Clock size={16} />
-              {idea.status === 'deferred' ? 'Deferred ✓' : 'Defer'}
+              {localStatus === 'deferred' ? 'Deferred ✓' : 'Defer'}
             </button>
             <button
-              className={`action-btn primary ${idea.status === 'pursuing' ? 'active' : ''}`}
-              onClick={() => onStatusChange(idea.id, idea.status === 'pursuing' ? 'ready' : 'pursuing')}
+              className={`action-btn secondary ${localStatus === 'pursuing' ? 'active-pursue' : ''}`}
+              onClick={() => handleStatusToggle('pursuing')}
             >
               <Check size={16} />
-              {idea.status === 'pursuing' ? 'Pursuing ✓' : 'Pursue'}
+              {localStatus === 'pursuing' ? 'Pursuing ✓' : 'Pursue'}
             </button>
           </div>
         )}

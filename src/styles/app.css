@@ -1397,14 +1397,25 @@
   color: var(--color-text-primary);
 }
 
-/* Active state for toggle buttons (Pursue/Defer) */
-.action-btn.active {
+/* Active state for Defer button (red) */
+.action-btn.active-defer {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.action-btn.active-defer:hover {
+  background: #c82333;
+}
+
+/* Active state for Pursue button (orange) */
+.action-btn.active-pursue {
   background: var(--color-accent);
   color: var(--color-bg-deep);
   border-color: var(--color-accent);
 }
 
-.action-btn.active:hover {
+.action-btn.active-pursue:hover {
   background: var(--color-accent-hover);
 }
 

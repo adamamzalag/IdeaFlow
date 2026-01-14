@@ -27,12 +27,12 @@ export function HomePage({
   const [isSaving, setIsSaving] = useState(false)
   const [isRecordingInReview, setIsRecordingInReview] = useState(false)
   const [isTranscribingInReview, setIsTranscribingInReview] = useState(false)
-  const [reviewKeyboardOffset, setReviewKeyboardOffset] = useState(0)
 
   // Refs for recording
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordingStreamRef = useRef<MediaStream | null>(null)
+  const reviewTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Cleanup on unmount
   useEffect(() => {
@@ -46,24 +46,12 @@ export function HomePage({
     }
   }, [])
 
-  // Keyboard detection for review modal
-  useEffect(() => {
-    const viewport = window.visualViewport
-    if (!viewport) return
-
-    const handleResize = () => {
-      const offset = window.innerHeight - viewport.height
-      setReviewKeyboardOffset(offset > 0 ? offset : 0)
-    }
-
-    viewport.addEventListener('resize', handleResize)
-    viewport.addEventListener('scroll', handleResize)
-
-    return () => {
-      viewport.removeEventListener('resize', handleResize)
-      viewport.removeEventListener('scroll', handleResize)
-    }
-  }, [])
+  // Scroll textarea into view when focused (for keyboard visibility)
+  const handleTextareaFocus = () => {
+    setTimeout(() => {
+      reviewTextareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 300) // Wait for keyboard animation
+  }
 
   const filteredIdeas = ideas.filter(idea => {
     if (activeTab === 'active') return idea.status === 'processing' || idea.status === 'ready'
@@ -377,11 +365,6 @@ export function HomePage({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              style={{
-                paddingBottom: isEditing && reviewKeyboardOffset > 0
-                  ? `calc(var(--space-4) + env(safe-area-inset-bottom) + ${reviewKeyboardOffset}px)`
-                  : undefined
-              }}
             >
               <div className="review-header">
                 <h2 className="review-title">Your Idea</h2>
@@ -393,8 +376,10 @@ export function HomePage({
               <div className="review-content">
                 {isEditing ? (
                   <textarea
+                    ref={reviewTextareaRef}
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
+                    onFocus={handleTextareaFocus}
                     className="review-textarea"
                     autoFocus
                   />
