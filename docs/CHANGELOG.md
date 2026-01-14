@@ -10,6 +10,22 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.4.2 - AI Persona Redesign (January 14, 2026)
+
+### Changed
+- **AI Analysis Persona: "Chief of Staff for Ideas"**
+  - Redesigned AI prompts for analysis and chat
+  - Less verbose, more substance-focused
+  - Adapts depth to idea complexity (brief for simple, thorough for complex)
+  - Strategic advisor tone: direct, honest, values user's time
+  - No more rigid template-filling or generic advice
+  - Chat responds adaptively based on what user is asking
+
+### Added
+- Design document: `docs/plans/2026-01-14-ai-persona-design.md`
+
+---
+
 ## v0.4.1 - Bug Fixes (January 14, 2026)
 
 ### Fixed
