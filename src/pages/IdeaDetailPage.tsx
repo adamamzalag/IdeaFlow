@@ -55,6 +55,7 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
+  const recordingStreamRef = useRef<MediaStream | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const keyboardOffset = useKeyboardOffset()
 
@@ -130,6 +131,7 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      recordingStreamRef.current = stream
       const recorder = new MediaRecorder(stream)
       audioChunksRef.current = []
 
@@ -165,8 +167,10 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
           setIsTranscribing(false)
         }
 
-        // Stop all audio tracks
-        stream.getTracks().forEach(t => t.stop())
+        // Stop all audio tracks and cleanup
+        recordingStreamRef.current?.getTracks().forEach(t => t.stop())
+        recordingStreamRef.current = null
+        setMediaRecorder(null)
       }
 
       recorder.start()
@@ -184,6 +188,14 @@ export function IdeaDetailPage({ idea: initialIdea, onBack, onStatusChange }: Id
       setIsRecording(false)
     }
   }
+
+  // Cleanup recording resources on unmount
+  useEffect(() => {
+    return () => {
+      recordingStreamRef.current?.getTracks().forEach(t => t.stop())
+      recordingStreamRef.current = null
+    }
+  }, [])
 
   const toggleRecording = () => {
     if (isRecording) {
