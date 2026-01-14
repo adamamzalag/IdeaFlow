@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { HomePage } from './pages/HomePage'
 import { IdeaDetailPage } from './pages/IdeaDetailPage'
 import { CaptureModal } from './components/CaptureModal'
-import { mockIdeas } from './lib/mock-data'
-import type { Idea, TabType } from './lib/types'
+import { getIdeas, getIdea, createIdea, updateIdeaStatus } from './lib/api'
+import type { Idea, IdeaStatus, TabType } from './lib/types'
 
 type View = 'home' | 'detail'
 
@@ -12,12 +12,37 @@ export default function App() {
   const [view, setView] = useState<View>('home')
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null)
   const [showCapture, setShowCapture] = useState(false)
-  const [ideas, setIdeas] = useState<Idea[]>(mockIdeas)
+  const [ideas, setIdeas] = useState<Idea[]>([])
   const [activeTab, setActiveTab] = useState<TabType>('active')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSelectIdea = (idea: Idea) => {
-    setSelectedIdea(idea)
-    setView('detail')
+  useEffect(() => {
+    async function loadIdeas() {
+      try {
+        setLoading(true)
+        const fetchedIdeas = await getIdeas()
+        setIdeas(fetchedIdeas)
+        setError(null)
+      } catch (err) {
+        setError('Failed to load ideas. Please refresh.')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadIdeas()
+  }, [])
+
+  const handleSelectIdea = async (idea: Idea) => {
+    try {
+      const fullIdea = await getIdea(idea.id)
+      setSelectedIdea(fullIdea)
+      setView('detail')
+    } catch (err) {
+      alert('Failed to load idea details.')
+      console.error(err)
+    }
   }
 
   const handleBack = () => {
@@ -25,60 +50,36 @@ export default function App() {
     setSelectedIdea(null)
   }
 
-  const handleCapture = (input: string, _isVoice: boolean) => {
-    const newIdea: Idea = {
-      id: String(Date.now()),
-      title: input.slice(0, 50) + (input.length > 50 ? '...' : ''),
-      rawInput: input,
-      status: 'processing',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+  const handleCapture = async (input: string, isVoice: boolean) => {
+    try {
+      const newIdea = await createIdea(input, isVoice)
+      setIdeas(prev => [newIdea, ...prev])
+      setShowCapture(false)
+    } catch (err) {
+      alert('Failed to save idea. Please try again.')
+      console.error(err)
     }
-    setIdeas(prev => [newIdea, ...prev])
-    setShowCapture(false)
-
-    // Simulate processing completion after 3 seconds
-    setTimeout(() => {
-      setIdeas(prev => prev.map(idea =>
-        idea.id === newIdea.id
-          ? {
-              ...idea,
-              status: 'ready' as const,
-              title: 'New idea being analyzed...',
-              analysis: {
-                version: 1,
-                content: `## Summary
-
-Your idea is being analyzed...
-
-## Initial Thoughts
-
-This is a placeholder analysis. In the real app, the AI would process your idea and generate a detailed analysis with:
-
-- **Problem identification** - What problem does this solve?
-- **Implementation approach** - How would this work?
-- **Effort estimate** - How much work is involved?
-- **Value assessment** - What's the potential impact?
-
-## Next Steps
-
-1. Connect to AI backend
-2. Generate real analysis
-3. Enable follow-up chat`
-              }
-            }
-          : idea
-      ))
-    }, 3000)
   }
 
-  const handleStatusChange = (ideaId: string, newStatus: 'pursuing' | 'deferred') => {
-    setIdeas(prev => prev.map(idea =>
-      idea.id === ideaId ? { ...idea, status: newStatus, updatedAt: new Date() } : idea
-    ))
-    if (selectedIdea?.id === ideaId) {
-      setSelectedIdea(prev => prev ? { ...prev, status: newStatus } : null)
+  const handleStatusChange = async (id: string, newStatus: IdeaStatus) => {
+    try {
+      const updated = await updateIdeaStatus(id, newStatus)
+      setIdeas(prev => prev.map(idea => idea.id === id ? updated : idea))
+      if (selectedIdea?.id === id) {
+        setSelectedIdea(updated)
+      }
+    } catch (err) {
+      alert('Failed to update idea.')
+      console.error(err)
     }
+  }
+
+  if (loading) {
+    return <div className="app loading"><p>Loading ideas...</p></div>
+  }
+
+  if (error) {
+    return <div className="app error"><p>{error}</p></div>
   }
 
   return (
