@@ -6,12 +6,13 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 
 ## Current Status
 
-**Version:** v0.4.1 (January 14, 2026)
+**Version:** v0.4.2 (January 14, 2026)
 **Phase:** Phase 3 Complete - AI Integration Working
 
 **What's Implemented:**
 - Voice/text capture with Whisper transcription ✓
 - Background AI analysis generation ✓
+- "Chief of Staff for Ideas" AI persona (adaptive, substantive analysis) ✓
 - Idea list with Active/Pursuing/Deferred tabs ✓
 - Idea detail with Analysis + Chat tabs ✓
 - Chat with AI that updates analysis ✓

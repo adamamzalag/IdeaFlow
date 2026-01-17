@@ -68,20 +68,31 @@ Brief description of what this feature does.
 
 | Spec | Status | Description |
 |------|--------|-------------|
-| (none yet) | - | Specs will be added as features are built |
+| (none yet) | - | Formal specs will be added as needed |
 
 ---
 
-## V1 Features to Spec
+## Design Documents
 
-As we build V1, these features will get detailed specs:
+Design documents live in `docs/plans/`:
 
-1. Voice Capture System
-2. AI Analysis Generation
-3. Chat Interface
-4. Ideas List & Status Management
-5. PWA Configuration
+| Document | Status | Description |
+|----------|--------|-------------|
+| `2026-01-10-ideaflow-design.md` | Implemented | Original IdeaFlow design |
+| `2026-01-14-ai-persona-design.md` | Implemented | "Chief of Staff for Ideas" AI persona |
 
 ---
 
-*Last updated: January 10, 2026*
+## V1 Features (Built)
+
+These core V1 features are implemented:
+
+1. Voice Capture System ✓
+2. AI Analysis Generation ✓
+3. Chat Interface ✓
+4. Ideas List & Status Management ✓
+5. PWA Configuration ✓
+
+---
+
+*Last updated: January 14, 2026*
