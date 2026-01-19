@@ -6,7 +6,7 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 
 ## Current Status
 
-**Version:** v0.4.5 (January 19, 2026)
+**Version:** v0.4.6 (January 19, 2026)
 **Phase:** Phase 3 Complete - AI Integration Working
 
 **What's Implemented:**
@@ -18,6 +18,8 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 - Chat with AI that updates analysis ✓
 - Pursue/Defer workflow ✓
 - Mobile-first PWA (installable) ✓
+- Swipe gestures for tab navigation ✓
+- Browser history for native back gesture ✓
 
 **What's NOT Implemented Yet:**
 - Replit Auth (using hardcoded default user)

@@ -10,6 +10,21 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.4.6 - Swipe Gestures (January 19, 2026)
+
+### Added
+- **Browser history integration** - OS/browser back gesture now works (Android swipe, iOS Safari back, browser back button). URLs update to reflect current view (`/` for home, `/idea/{id}` for detail).
+- **Tab swipe gestures** - Swipe left/right to switch tabs on both HomePage (Active/Pursuing/Deferred) and IdeaDetailPage (Analysis/Chat)
+- **Edge swipe back** - Swipe from left edge (~20px) on detail page to go back to home
+
+### Technical
+- New `SwipeableTabs` component using Framer Motion drag gestures
+- Reusable across any tabbed interface
+- Rubber-band effect at tab boundaries
+- 30% swipe threshold or 500px/s velocity to trigger tab change
+
+---
+
 ## v0.4.5 - FAB Fix + API Retry (January 19, 2026)
 
 ### Fixed
