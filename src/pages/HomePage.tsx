@@ -323,6 +323,9 @@ export function HomePage({
         )}
       </main>
 
+      {/* FAB spacer - prevents content from scrolling behind FAB */}
+      <div className="fab-spacer" />
+
       {/* Capture FAB - transforms when recording */}
       <div className="capture-fab-container">
         <motion.button
