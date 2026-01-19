@@ -228,11 +228,6 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
     }
   }
 
-  // Simple tab change - no regeneration on tab switch
-  const handleTabChange = (tab: DetailTab) => {
-    setActiveTab(tab)
-  }
-
   // Handle back navigation - regenerate analysis if there are new messages (fire-and-forget)
   const handleBack = useCallback(() => {
     if (hasNewMessages) {
@@ -275,7 +270,7 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
         <div className="detail-tabs">
           <button
             className={`detail-tab ${activeTab === 'analysis' ? 'active' : ''}`}
-            onClick={() => handleTabChange('analysis')}
+            onClick={() => setActiveTab('analysis')}
           >
             <FileText size={16} />
             Analysis
@@ -285,7 +280,7 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
           </button>
           <button
             className={`detail-tab ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => handleTabChange('chat')}
+            onClick={() => setActiveTab('chat')}
           >
             <MessageCircle size={16} />
             Chat
@@ -306,7 +301,7 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
       <SwipeableTabs
         tabs={['analysis', 'chat']}
         activeTab={activeTab}
-        onTabChange={(tab) => handleTabChange(tab as DetailTab)}
+        onTabChange={(tab) => setActiveTab(tab as DetailTab)}
         onEdgeSwipeLeft={handleBack}
       >
         <div className="detail-content">
