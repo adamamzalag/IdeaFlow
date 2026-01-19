@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Settings, Sparkles, ChevronRight, Lightbulb, Mic, X, Play, Pencil, Check } from 'lucide-react'
+import { SwipeableTabs } from '../components/SwipeableTabs'
 import type { Idea, TabType } from '../lib/types'
 
 interface HomePageProps {
@@ -297,30 +298,36 @@ export function HomePage({
           </TabButton>
         </div>
 
-        {filteredIdeas.length === 0 ? (
-          <EmptyState tab={activeTab} />
-        ) : (
-          <motion.div
-            className="ideas-list"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: {
-                transition: {
-                  staggerChildren: 0.03
+        <SwipeableTabs
+          tabs={['active', 'pursuing', 'deferred']}
+          activeTab={activeTab}
+          onTabChange={(tab) => onTabChange(tab as TabType)}
+        >
+          {filteredIdeas.length === 0 ? (
+            <EmptyState tab={activeTab} />
+          ) : (
+            <motion.div
+              className="ideas-list"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: {
+                  transition: {
+                    staggerChildren: 0.03
+                  }
                 }
-              }
-            }}
-          >
-            {filteredIdeas.map((idea) => (
-              <IdeaCard
-                key={idea.id}
-                idea={idea}
-                onClick={() => onSelectIdea(idea)}
-              />
-            ))}
-          </motion.div>
-        )}
+              }}
+            >
+              {filteredIdeas.map((idea) => (
+                <IdeaCard
+                  key={idea.id}
+                  idea={idea}
+                  onClick={() => onSelectIdea(idea)}
+                />
+              ))}
+            </motion.div>
+          )}
+        </SwipeableTabs>
       </main>
 
       {/* FAB spacer - prevents content from scrolling behind FAB */}
