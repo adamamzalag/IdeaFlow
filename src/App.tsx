@@ -47,6 +47,10 @@ export default function App() {
             setSelectedIdea(fullIdea)
             setView('detail')
           }).catch(console.error)
+        } else {
+          // Idea was deleted or not found - go home
+          setView('home')
+          setSelectedIdea(null)
         }
       } else {
         // Back to home
@@ -76,7 +80,8 @@ export default function App() {
     setView('home')
     setSelectedIdea(null)
     // Push history entry for home
-    history.pushState({ view: 'home' }, '', '/')
+    // Replace current history entry instead of pushing new one
+    history.replaceState({ view: 'home' }, '', '/')
     // Refetch ideas to update viewed status (removes unread dots)
     try {
       const fetchedIdeas = await getIdeas()
