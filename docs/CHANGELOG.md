@@ -10,6 +10,23 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.4.3 - AI Web Search + Conciseness (January 18, 2026)
+
+### Changed
+- **Model upgraded to Claude Sonnet 4.5 with web search**
+  - Now uses `anthropic/claude-sonnet-4.5:online` via OpenRouter
+  - AI can search the web for current tools, pricing, competitors
+  - Ask about "best AI tools right now" and get current answers
+
+- **AI prompts rewritten for conciseness**
+  - Reframed as "executive analyst presenting to busy decision-maker"
+  - "30-second hallway conversation" framing for chat
+  - Verdict first, supporting detail second
+  - No more hedging ("might", "could potentially")
+  - Cut preamble and filler text
+
+---
+
 ## v0.4.2 - AI Persona Redesign (January 14, 2026)
 
 ### Changed
