@@ -21,6 +21,10 @@ export default function App() {
         const fetchedIdeas = await getIdeas()
         setIdeas(fetchedIdeas)
         setError(null)
+        // Set initial history state
+        if (!history.state) {
+          history.replaceState({ view: 'home' }, '', '/')
+        }
       } catch (err) {
         setError('Failed to load ideas. Please refresh.')
         console.error(err)
@@ -31,11 +35,37 @@ export default function App() {
     loadIdeas()
   }, [])
 
+  // Handle browser/OS back gesture
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state
+      if (state?.view === 'detail' && state?.ideaId) {
+        // Forward navigation to detail
+        const idea = ideas.find(i => i.id === state.ideaId)
+        if (idea) {
+          getIdea(idea.id).then(fullIdea => {
+            setSelectedIdea(fullIdea)
+            setView('detail')
+          }).catch(console.error)
+        }
+      } else {
+        // Back to home
+        setView('home')
+        setSelectedIdea(null)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [ideas])
+
   const handleSelectIdea = async (idea: Idea) => {
     try {
       const fullIdea = await getIdea(idea.id)
       setSelectedIdea(fullIdea)
       setView('detail')
+      // Push history entry for browser back support
+      history.pushState({ view: 'detail', ideaId: idea.id }, '', `/idea/${idea.id}`)
     } catch (err) {
       alert('Failed to load idea details.')
       console.error(err)
@@ -45,6 +75,8 @@ export default function App() {
   const handleBack = async () => {
     setView('home')
     setSelectedIdea(null)
+    // Push history entry for home
+    history.pushState({ view: 'home' }, '', '/')
     // Refetch ideas to update viewed status (removes unread dots)
     try {
       const fetchedIdeas = await getIdeas()
