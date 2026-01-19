@@ -63,19 +63,28 @@ Adam captured a new idea. Give him a quick, sharp analysis.
 
 Generate a short title (5-10 words) and your analysis.
 
-Structure:
-1. **Verdict first** - Is this worth pursuing? Say it upfront.
-2. **Key insight** - What's the most important thing about this idea?
-3. **Reality check** - What would it actually take? Any dealbreakers?
-4. **If relevant** - Search the web for current tools, competitors, or pricing.
+Use this exact structure:
 
-Match depth to complexity. Simple idea = few sentences. Complex idea = more, but still tight.
+## Bottom Line
+[1-2 sentences: pursue/defer/needs work + why. This is the only section many users read.]
+
+## Key Points
+- [Most important insight]
+- [Second insight if needed]
+- [Reality check - what it would actually take]
+
+## Detail
+[Optional: deeper analysis ONLY for complex ideas. Skip entirely for simple ones.]
+
+Match depth to complexity. Simple idea = Bottom Line + 2-3 Key Points. No Detail section needed.
+
+If current info helps (tools, pricing, competitors), search the web.
 
 Format:
 TITLE: [short title]
 
 ANALYSIS:
-[your analysis]`
+[your analysis using structure above]`
 
   const response = await openrouter.chat.completions.create({
     model: MODEL,
@@ -97,28 +106,14 @@ ANALYSIS:
  * Parses the AI response to extract title and analysis
  */
 function parseAnalysisResponse(response: string, rawInput: string): { title: string; content: string } {
-  // Try to extract TITLE: line
   const titleMatch = response.match(/^TITLE:\s*(.+?)(?:\n|$)/im)
   const analysisMatch = response.match(/ANALYSIS:\s*([\s\S]*)/im)
 
-  let title: string
-  let content: string
+  const title = titleMatch?.[1]?.trim()
+    || rawInput.slice(0, 50) + (rawInput.length > 50 ? '...' : '')
 
-  if (titleMatch && titleMatch[1]) {
-    title = titleMatch[1].trim()
-  } else {
-    // Fallback: use first 50 chars of rawInput
-    title = rawInput.slice(0, 50) + (rawInput.length > 50 ? '...' : '')
-  }
-
-  if (analysisMatch && analysisMatch[1]) {
-    content = analysisMatch[1].trim()
-  } else {
-    // Fallback: use the whole response (minus title line if present)
-    content = titleMatch
-      ? response.replace(/^TITLE:\s*.+?\n/im, '').trim()
-      : response.trim()
-  }
+  const content = analysisMatch?.[1]?.trim()
+    || (titleMatch ? response.replace(/^TITLE:\s*.+?\n/im, '').trim() : response.trim())
 
   return { title, content }
 }
@@ -134,12 +129,13 @@ export async function generateChatResponse(
 ): Promise<string> {
   const systemPrompt = `${AI_PERSONA}
 
-You're in a hallway conversation with Adam. He has 30 seconds.
+Hallway conversation. Adam asked a question. Answer it.
 
-- Answer the question directly. Don't set up, just answer.
-- If he asks for validation on a bad idea, say so.
-- If he needs current info (tools, pricing, competitors), search the web.
-- Push back when warranted - he values honesty over agreement.
+Rules:
+- First sentence IS the answer. No setup, no "Great question", no restating.
+- Add detail only if the question requires it.
+- Use markdown (bold, bullets) for scannable responses.
+- Search the web if current info helps.
 
 ORIGINAL IDEA:
 ${rawInput}
@@ -177,11 +173,22 @@ export async function regenerateAnalysis(
 
   const systemPrompt = `${AI_PERSONA}
 
-You discussed this idea with Adam and learned something new. Write a fresh analysis that reflects the current understanding.
+You discussed this idea with Adam. Write a fresh analysis reflecting current understanding.
 
-- Incorporate insights from the conversation
-- Drop anything that's now outdated
-- Same format: verdict first, key insight, reality check
+Use this exact structure:
+
+## Bottom Line
+[1-2 sentences: pursue/defer/needs work + why]
+
+## Key Points
+- [Most important insight]
+- [Second insight if needed]
+- [Reality check]
+
+## Detail
+[Optional: only for complex ideas]
+
+Incorporate conversation insights. Drop outdated info.
 
 Format:
 TITLE: [short title]

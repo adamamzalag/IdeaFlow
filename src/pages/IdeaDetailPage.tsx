@@ -532,11 +532,13 @@ function ChatMessagesView({ messages, messagesEndRef, isLoading, isSending }: Ch
       {messages.map((message, index) => (
         <motion.div
           key={index}
-          className={`chat-message ${message.role}`}
+          className={`chat-message ${message.role} markdown-content`}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {message.content}
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {message.content}
+          </ReactMarkdown>
         </motion.div>
       ))}
       {isSending && (

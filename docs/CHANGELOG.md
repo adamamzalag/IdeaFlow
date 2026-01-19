@@ -10,6 +10,25 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.4.4 - Chat Markdown + Executive Summary (January 19, 2026)
+
+### Fixed
+- **Chat messages now render markdown** - Bold, bullets, and formatting display correctly instead of raw `*` and `-` characters
+
+### Changed
+- **Analysis uses executive summary structure**
+  - "Bottom Line" section appears first with 1-2 sentence verdict
+  - "Key Points" for essential insights and reality check
+  - "Detail" section only for complex ideas (omitted for simple ones)
+  - Users can scan verdict in 5 seconds, read deeper if wanted
+
+- **Chat responses tighter**
+  - First sentence is the direct answer
+  - No setup, no "Great question", no restating
+  - Detail only when question requires it
+
+---
+
 ## v0.4.3 - AI Web Search + Conciseness (January 18, 2026)
 
 ### Changed
