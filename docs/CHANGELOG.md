@@ -10,6 +10,16 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.4.5 - FAB Fix + API Retry (January 19, 2026)
+
+### Fixed
+- **FAB no longer covers bottom of ideas list** - Increased bottom padding from 80px to 180px for proper FAB clearance
+
+### Added
+- **API retry logic for network errors** - OpenRouter calls now retry up to 2 times on connection drops/timeouts. Fixes intermittent "TypeError: terminated" errors during analysis regeneration.
+
+---
+
 ## v0.4.4 - Chat Markdown + Executive Summary (January 19, 2026)
 
 ### Fixed

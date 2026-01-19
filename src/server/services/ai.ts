@@ -11,6 +11,34 @@ const openrouter = new OpenAI({
 
 const MODEL = 'anthropic/claude-sonnet-4.5:online'
 
+/**
+ * Retry wrapper for network errors (connection drops, timeouts)
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 2,
+  delay = 1000
+): Promise<T> {
+  let lastError: Error | null = null
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      const isNetworkError = lastError.message.includes('terminated') ||
+        lastError.message.includes('socket') ||
+        lastError.message.includes('ECONNRESET')
+
+      if (!isNetworkError || attempt === maxRetries) {
+        throw lastError
+      }
+      console.warn(`Retry ${attempt + 1}/${maxRetries} after network error: ${lastError.message}`)
+      await new Promise(r => setTimeout(r, delay * (attempt + 1)))
+    }
+  }
+  throw lastError
+}
+
 // AI Persona: Executive Analyst
 // Presents insights to a busy decision-maker who has no time for fluff
 const AI_PERSONA = `
@@ -86,14 +114,16 @@ TITLE: [short title]
 ANALYSIS:
 [your analysis using structure above]`
 
-  const response = await openrouter.chat.completions.create({
-    model: MODEL,
-    max_tokens: 2000,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: `Here's my idea:\n\n${rawInput}` },
-    ],
-  })
+  const response = await withRetry(() =>
+    openrouter.chat.completions.create({
+      model: MODEL,
+      max_tokens: 2000,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Here's my idea:\n\n${rawInput}` },
+      ],
+    })
+  )
 
   const fullResponse = response.choices[0]?.message?.content || ''
 
@@ -149,11 +179,13 @@ ${currentAnalysis}`
     { role: 'user', content: userMessage },
   ]
 
-  const response = await openrouter.chat.completions.create({
-    model: MODEL,
-    max_tokens: 1000,
-    messages,
-  })
+  const response = await withRetry(() =>
+    openrouter.chat.completions.create({
+      model: MODEL,
+      max_tokens: 1000,
+      messages,
+    })
+  )
 
   return response.choices[0]?.message?.content || ''
 }
@@ -205,14 +237,16 @@ ${previousAnalysis}
 CONVERSATION:
 ${chatTranscript}`
 
-  const response = await openrouter.chat.completions.create({
-    model: MODEL,
-    max_tokens: 2000,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-  })
+  const response = await withRetry(() =>
+    openrouter.chat.completions.create({
+      model: MODEL,
+      max_tokens: 2000,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+    })
+  )
 
   const fullResponse = response.choices[0]?.message?.content || ''
 
