@@ -314,9 +314,9 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
             {activeTab === 'analysis' ? (
               <motion.div
                 key="analysis"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
                 <AnalysisView
@@ -328,9 +328,9 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
             ) : (
               <motion.div
                 key="chat"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="chat-view"
               >
