@@ -302,7 +302,6 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
         tabs={['analysis', 'chat']}
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab as DetailTab)}
-        onEdgeSwipeLeft={handleBack}
       >
         <div className="detail-content">
           <AnimatePresence mode="wait">

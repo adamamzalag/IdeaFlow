@@ -15,13 +15,21 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Browser history integration** - OS/browser back gesture now works (Android swipe, iOS Safari back, browser back button). URLs update to reflect current view (`/` for home, `/idea/{id}` for detail).
 - **Tab swipe gestures** - Swipe left/right to switch tabs on both HomePage (Active/Pursuing/Deferred) and IdeaDetailPage (Analysis/Chat)
-- **Edge swipe back** - Swipe from left edge (~20px) on detail page to go back to home
+
+### Fixed
+- **Detail page swipe now works** - Removed `touchAction: 'pan-y'` that was blocking horizontal touch events at browser level
+- **Detail page vertical scroll fixed** - Same root cause; removing touchAction allows proper scroll passthrough
+- **Swipeable area fills container** - Fixed flex layout so swiping works in empty space below cards
+
+### Removed
+- **Edge swipe back** - Removed 20px left-edge detection; OS gestures + browser history already handle back navigation without conflicts
 
 ### Technical
 - New `SwipeableTabs` component using Framer Motion drag gestures
 - Reusable across any tabbed interface
 - Rubber-band effect at tab boundaries
 - 30% swipe threshold or 500px/s velocity to trigger tab change
+- `dragDirectionLock` separates horizontal swipe from vertical scroll
 
 ---
 
