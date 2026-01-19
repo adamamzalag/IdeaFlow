@@ -195,4 +195,4 @@ npm run db:studio    # Drizzle Studio UI
 
 ---
 
-*Last updated: January 14, 2026*
+*Last updated: January 19, 2026*

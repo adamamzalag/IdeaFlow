@@ -2,6 +2,20 @@
 
 ## Pending Tests
 
+### v0.4.5 - FAB Fix + API Retry (January 19, 2026)
+
+Test the scroll boundary FAB fix:
+
+- [ ] **FAB overlap fix** - On ideas list:
+  - Add enough ideas to make list scroll
+  - Scroll to bottom
+  - Last item should stop ABOVE the FAB (no overlap)
+  - FAB remains accessible and clickable
+
+- [ ] **API retry** - Network error handling:
+  - Intermittent network errors should retry automatically
+  - Analysis regeneration should succeed even with brief drops
+
 ### v0.4.2 - AI Persona (January 14, 2026)
 
 Test the new "Chief of Staff for Ideas" AI behavior:
@@ -50,4 +64,4 @@ Already marked fixed, but verify on device:
 
 ---
 
-*Last updated: January 14, 2026*
+*Last updated: January 19, 2026*
