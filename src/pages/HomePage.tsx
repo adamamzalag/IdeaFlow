@@ -303,30 +303,32 @@ export function HomePage({
           activeTab={activeTab}
           onTabChange={(tab) => onTabChange(tab as TabType)}
         >
-          {filteredIdeas.length === 0 ? (
-            <EmptyState tab={activeTab} />
-          ) : (
-            <motion.div
-              className="ideas-list"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.03
+          <div className="home-scroll">
+            {filteredIdeas.length === 0 ? (
+              <EmptyState tab={activeTab} />
+            ) : (
+              <motion.div
+                className="ideas-list"
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  visible: {
+                    transition: {
+                      staggerChildren: 0.03
+                    }
                   }
-                }
-              }}
-            >
-              {filteredIdeas.map((idea) => (
-                <IdeaCard
-                  key={idea.id}
-                  idea={idea}
-                  onClick={() => onSelectIdea(idea)}
-                />
-              ))}
-            </motion.div>
-          )}
+                }}
+              >
+                {filteredIdeas.map((idea) => (
+                  <IdeaCard
+                    key={idea.id}
+                    idea={idea}
+                    onClick={() => onSelectIdea(idea)}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </div>
         </SwipeableTabs>
       </main>
 

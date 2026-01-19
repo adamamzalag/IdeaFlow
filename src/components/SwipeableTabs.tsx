@@ -85,8 +85,9 @@ export function SwipeableTabs({
         animate={controls}
         style={{
           flex: 1,
-          minHeight: '100%',
-          width: '100%'
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         {children}

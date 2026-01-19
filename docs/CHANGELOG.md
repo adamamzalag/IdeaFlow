@@ -17,9 +17,9 @@ All notable changes to this project will be documented in this file.
 - **Tab swipe gestures** - Swipe left/right to switch tabs on both HomePage (Active/Pursuing/Deferred) and IdeaDetailPage (Analysis/Chat)
 
 ### Fixed
-- **Detail page swipe now works** - Removed `touchAction: 'pan-y'` that was blocking horizontal touch events at browser level
-- **Detail page vertical scroll fixed** - Same root cause; removing touchAction allows proper scroll passthrough
-- **Swipeable area fills container** - Fixed flex layout so swiping works in empty space below cards
+- **Detail page swipe and scroll** - Added `touch-action: pan-y` to `.detail-content` scroll container so browser handles vertical scroll while passing horizontal touches to Framer Motion
+- **HomePage swipe works everywhere** - Restructured layout: scroll now inside SwipeableTabs via `.home-scroll` wrapper. Swipe works on cards AND empty space below
+- **Proper touch event handling** - `touch-action: pan-y` on scroll containers (not drag elements) is the correct pattern for Framer Motion drag + native scroll coexistence
 
 ### Removed
 - **Edge swipe back** - Removed 20px left-edge detection; OS gestures + browser history already handle back navigation without conflicts
@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 - Rubber-band effect at tab boundaries
 - 30% swipe threshold or 500px/s velocity to trigger tab change
 - `dragDirectionLock` separates horizontal swipe from vertical scroll
+- `.home-scroll` CSS class: scroll container with `touch-action: pan-y` for swipe support
 
 ---
 

@@ -64,7 +64,16 @@
   flex: 1;
   padding: var(--space-2) var(--page-padding);
   padding-bottom: var(--space-4);
+  overflow: hidden; /* Scroll moved inside SwipeableTabs */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scroll container inside SwipeableTabs - allows swipe to work everywhere */
+.home-scroll {
+  flex: 1;
   overflow-y: auto;
+  touch-action: pan-y; /* Allow vertical scroll, pass horizontal to JS for swipe */
 }
 
 /* FAB spacer - prevents content from scrolling behind FAB */
@@ -846,6 +855,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  touch-action: pan-y; /* Allow vertical scroll, pass horizontal to JS for swipe */
   padding: var(--space-4) var(--page-padding);
   padding-bottom: 150px; /* Space for fixed bottom bar */
   width: 100%;
