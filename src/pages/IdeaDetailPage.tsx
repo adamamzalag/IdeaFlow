@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Idea, Message } from '../lib/types'
 import { getChatMessages, sendChatMessage, regenerateAnalysisFromChat, markIdeaViewed } from '../lib/api'
+import { SwipeableTabs } from '../components/SwipeableTabs'
 
 type DetailTab = 'analysis' | 'chat'
 
@@ -301,52 +302,59 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
         </div>
       </header>
 
-      {/* Content */}
-      <div className="detail-content">
-        <AnimatePresence mode="wait">
-          {activeTab === 'analysis' ? (
-            <motion.div
-              key="analysis"
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <AnalysisView
-                idea={idea}
-                showTranscript={showTranscript}
-                onToggleTranscript={() => setShowTranscript(!showTranscript)}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="chat"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ duration: 0.2 }}
-              className="chat-view"
-            >
-              {/* View Analysis Button - Quick access while chatting */}
-              {idea.analysis && (
-                <button
-                  className="view-analysis-btn"
-                  onClick={() => setShowAnalysisModal(true)}
-                >
-                  <Eye size={14} />
-                  View Analysis
-                </button>
-              )}
-              <ChatMessagesView
-                messages={messages}
-                messagesEndRef={messagesEndRef}
-                isLoading={loadingMessages}
-                isSending={isSending}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Content - Swipeable */}
+      <SwipeableTabs
+        tabs={['analysis', 'chat']}
+        activeTab={activeTab}
+        onTabChange={(tab) => handleTabChange(tab as DetailTab)}
+        onEdgeSwipeLeft={handleBack}
+      >
+        <div className="detail-content">
+          <AnimatePresence mode="wait">
+            {activeTab === 'analysis' ? (
+              <motion.div
+                key="analysis"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <AnalysisView
+                  idea={idea}
+                  showTranscript={showTranscript}
+                  onToggleTranscript={() => setShowTranscript(!showTranscript)}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="chat"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2 }}
+                className="chat-view"
+              >
+                {/* View Analysis Button - Quick access while chatting */}
+                {idea.analysis && (
+                  <button
+                    className="view-analysis-btn"
+                    onClick={() => setShowAnalysisModal(true)}
+                  >
+                    <Eye size={14} />
+                    View Analysis
+                  </button>
+                )}
+                <ChatMessagesView
+                  messages={messages}
+                  messagesEndRef={messagesEndRef}
+                  isLoading={loadingMessages}
+                  isSending={isSending}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </SwipeableTabs>
 
       {/* Fixed Bottom Bar - Input + Action Buttons */}
       <div
