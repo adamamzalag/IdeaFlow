@@ -12,6 +12,41 @@ interface HomePageProps {
   onCapture: (input: string, isVoice: boolean) => Promise<void>
 }
 
+interface IdeasListProps {
+  ideas: Idea[]
+  tab: TabType
+  onSelectIdea: (idea: Idea) => void
+}
+
+function IdeasList({ ideas, tab, onSelectIdea }: IdeasListProps) {
+  if (ideas.length === 0) {
+    return <EmptyState tab={tab} />
+  }
+
+  return (
+    <motion.div
+      className="ideas-list"
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.03
+          }
+        }
+      }}
+    >
+      {ideas.map((idea) => (
+        <IdeaCard
+          key={idea.id}
+          idea={idea}
+          onClick={() => onSelectIdea(idea)}
+        />
+      ))}
+    </motion.div>
+  )
+}
+
 export function HomePage({
   ideas,
   activeTab,
@@ -53,13 +88,6 @@ export function HomePage({
       reviewTextareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 300) // Wait for keyboard animation
   }
-
-  const filteredIdeas = ideas.filter(idea => {
-    if (activeTab === 'active') return idea.status === 'processing' || idea.status === 'ready'
-    if (activeTab === 'pursuing') return idea.status === 'pursuing'
-    if (activeTab === 'deferred') return idea.status === 'deferred'
-    return false
-  })
 
   const counts = {
     active: ideas.filter(i => i.status === 'processing' || i.status === 'ready').length,
@@ -299,35 +327,29 @@ export function HomePage({
         </div>
 
         <SwipeableTabs
-          tabs={['active', 'pursuing', 'deferred']}
           activeTab={activeTab}
           onTabChange={(tab) => onTabChange(tab as TabType)}
         >
-          <div className="home-scroll">
-            {filteredIdeas.length === 0 ? (
-              <EmptyState tab={activeTab} />
-            ) : (
-              <motion.div
-                className="ideas-list"
-                initial="hidden"
-                animate="visible"
-                variants={{
-                  visible: {
-                    transition: {
-                      staggerChildren: 0.03
-                    }
-                  }
-                }}
-              >
-                {filteredIdeas.map((idea) => (
-                  <IdeaCard
-                    key={idea.id}
-                    idea={idea}
-                    onClick={() => onSelectIdea(idea)}
-                  />
-                ))}
-              </motion.div>
-            )}
+          <div data-tab="active" className="swipe-panel">
+            <IdeasList
+              ideas={ideas.filter(i => i.status === 'processing' || i.status === 'ready')}
+              tab="active"
+              onSelectIdea={onSelectIdea}
+            />
+          </div>
+          <div data-tab="pursuing" className="swipe-panel">
+            <IdeasList
+              ideas={ideas.filter(i => i.status === 'pursuing')}
+              tab="pursuing"
+              onSelectIdea={onSelectIdea}
+            />
+          </div>
+          <div data-tab="deferred" className="swipe-panel">
+            <IdeasList
+              ideas={ideas.filter(i => i.status === 'deferred')}
+              tab="deferred"
+              onSelectIdea={onSelectIdea}
+            />
           </div>
         </SwipeableTabs>
       </main>
