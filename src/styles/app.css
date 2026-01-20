@@ -1829,3 +1829,33 @@
   border-color: var(--color-border-default);
   border-top-color: var(--color-accent);
 }
+
+/* ============================================
+   SWIPEABLE TABS - CSS Scroll Snap
+   ============================================ */
+
+.swipe-container {
+  flex: 1;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.swipe-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+.swipe-panel {
+  flex: 0 0 100%;
+  min-width: 100%;
+  overflow-y: auto;
+  scroll-snap-align: start;
+}
+
+.detail-panel-content {
+  padding: var(--space-4) var(--page-padding);
+  padding-bottom: 150px; /* Space for fixed bottom bar */
+}
