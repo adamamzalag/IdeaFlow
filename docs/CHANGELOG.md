@@ -10,6 +10,27 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## v0.4.7 - CSS Scroll Snap Rewrite (January 20, 2026)
+
+### Changed
+- **Swipe gestures now use CSS scroll-snap** - Replaced Framer Motion `drag` with native browser scroll-snap. This resolves the fundamental conflict between JavaScript drag detection and native scroll.
+- **All tab panels render simultaneously** - Panels are laid out horizontally and the browser handles scroll/snap natively. This is more performant and reliable than conditional rendering.
+
+### Fixed
+- **Vertical scroll + horizontal swipe now both work** - Previous Framer Motion approach couldn't reliably handle both due to `touch-action` browser limitations
+- **Fast swipe no longer skips tabs** - Added `scroll-snap-stop: always` so each tab must be visited (can't swipe from tab 1 to tab 3 directly)
+- **Chat messages no longer cut off by bottom bar** - Removed `height: 100%` from `.chat-view` which was causing sizing issues after the scroll container refactor
+
+### Technical
+- `SwipeableTabs` component rewritten to use CSS scroll-snap
+- New CSS classes: `.swipe-container`, `.swipe-panel`, `.detail-panel-content`
+- Removed obsolete: `.home-scroll`, `.detail-content`
+- `scroll-snap-type: x mandatory` on container, `scroll-snap-align: start` + `scroll-snap-stop: always` on panels
+- Scroll position detection updates tab indicator via `onscroll` event
+- Design docs: `docs/plans/2026-01-20-css-scroll-snap-design.md`, `docs/plans/2026-01-20-css-scroll-snap-implementation.md`
+
+---
+
 ## v0.4.6 - Swipe Gestures (January 19, 2026)
 
 ### Added

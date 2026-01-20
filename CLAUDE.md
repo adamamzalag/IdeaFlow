@@ -6,7 +6,7 @@ IdeaFlow is a phone-first PWA for capturing and developing ideas with AI assista
 
 ## Current Status
 
-**Version:** v0.4.6 (January 19, 2026)
+**Version:** v0.4.7 (January 20, 2026)
 **Phase:** Phase 3 Complete - AI Integration Working
 
 **What's Implemented:**
@@ -197,4 +197,4 @@ npm run db:studio    # Drizzle Studio UI
 
 ---
 
-*Last updated: January 19, 2026*
+*Last updated: January 20, 2026*
