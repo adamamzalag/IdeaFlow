@@ -299,54 +299,34 @@ export function IdeaDetailPage({ idea, onBack, onStatusChange }: IdeaDetailPageP
 
       {/* Content - Swipeable */}
       <SwipeableTabs
-        tabs={['analysis', 'chat']}
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab as DetailTab)}
       >
-        <div className="detail-content">
-          <AnimatePresence mode="wait">
-            {activeTab === 'analysis' ? (
-              <motion.div
-                key="analysis"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+        <div data-tab="analysis" className="swipe-panel detail-panel-content">
+          <AnalysisView
+            idea={idea}
+            showTranscript={showTranscript}
+            onToggleTranscript={() => setShowTranscript(!showTranscript)}
+          />
+        </div>
+        <div data-tab="chat" className="swipe-panel detail-panel-content">
+          <div className="chat-view">
+            {idea.analysis && (
+              <button
+                className="view-analysis-btn"
+                onClick={() => setShowAnalysisModal(true)}
               >
-                <AnalysisView
-                  idea={idea}
-                  showTranscript={showTranscript}
-                  onToggleTranscript={() => setShowTranscript(!showTranscript)}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="chat"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="chat-view"
-              >
-                {/* View Analysis Button - Quick access while chatting */}
-                {idea.analysis && (
-                  <button
-                    className="view-analysis-btn"
-                    onClick={() => setShowAnalysisModal(true)}
-                  >
-                    <Eye size={14} />
-                    View Analysis
-                  </button>
-                )}
-                <ChatMessagesView
-                  messages={messages}
-                  messagesEndRef={messagesEndRef}
-                  isLoading={loadingMessages}
-                  isSending={isSending}
-                />
-              </motion.div>
+                <Eye size={14} />
+                View Analysis
+              </button>
             )}
-          </AnimatePresence>
+            <ChatMessagesView
+              messages={messages}
+              messagesEndRef={messagesEndRef}
+              isLoading={loadingMessages}
+              isSending={isSending}
+            />
+          </div>
         </div>
       </SwipeableTabs>
 
