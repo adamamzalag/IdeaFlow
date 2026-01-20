@@ -69,12 +69,6 @@
   flex-direction: column;
 }
 
-/* Scroll container inside SwipeableTabs - allows swipe to work everywhere */
-.home-scroll {
-  flex: 1;
-  overflow-y: auto;
-}
-
 /* FAB spacer - prevents content from scrolling behind FAB */
 .fab-spacer {
   flex-shrink: 0;
@@ -847,18 +841,6 @@
   height: 6px;
   background: var(--color-accent);
   border-radius: var(--radius-full);
-}
-
-/* Tab Content Area */
-.detail-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: var(--space-4) var(--page-padding);
-  padding-bottom: 150px; /* Space for fixed bottom bar */
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
 /* Fixed Bottom Bar - Input + Action Buttons */
