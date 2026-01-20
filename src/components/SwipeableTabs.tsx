@@ -1,99 +1,89 @@
-import { useRef, ReactNode } from 'react'
-import { motion, useAnimation, PanInfo } from 'framer-motion'
+import { useRef, useEffect, Children, ReactNode, ReactElement } from 'react'
 
 interface SwipeableTabsProps {
-  tabs: string[]
   activeTab: string
   onTabChange: (tab: string) => void
   children: ReactNode
 }
 
-const SWIPE_THRESHOLD = 0.3 // 30% of width
-const VELOCITY_THRESHOLD = 500 // px/s
-
 export function SwipeableTabs({
-  tabs,
   activeTab,
   onTabChange,
   children
 }: SwipeableTabsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const controls = useAnimation()
+  const isScrollingRef = useRef(false)
+  const scrollTimeoutRef = useRef<number | null>(null)
 
-  const currentIndex = Math.max(0, tabs.indexOf(activeTab))
-  const isFirstTab = currentIndex === 0
-  const isLastTab = currentIndex === tabs.length - 1
+  // Convert children to array and extract tab IDs
+  const panels = Children.toArray(children) as ReactElement[]
+  const tabIds = panels.map(panel => panel.props['data-tab'] as string)
+  const activeIndex = tabIds.indexOf(activeTab)
 
-  const handleDragEnd = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
-    const containerWidth = containerRef.current?.offsetWidth || 300
-    const offset = info.offset.x
-    const velocity = info.velocity.x
+  // Scroll to active tab when activeTab prop changes (e.g., from tab button click)
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || activeIndex < 0) return
 
-    // Determine if swipe should change tabs
-    const swipedPastThreshold = Math.abs(offset) > containerWidth * SWIPE_THRESHOLD
-    const fastSwipe = Math.abs(velocity) > VELOCITY_THRESHOLD
+    const targetScroll = activeIndex * container.offsetWidth
 
-    if (swipedPastThreshold || fastSwipe) {
-      if (offset > 0 && !isFirstTab) {
-        // Swipe right - go to previous tab
-        onTabChange(tabs[currentIndex - 1])
-      } else if (offset < 0 && !isLastTab) {
-        // Swipe left - go to next tab
-        onTabChange(tabs[currentIndex + 1])
+    // Only scroll if not already at the right position
+    if (Math.abs(container.scrollLeft - targetScroll) > 10) {
+      isScrollingRef.current = true
+      container.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      })
+
+      // Reset flag after scroll animation completes
+      setTimeout(() => {
+        isScrollingRef.current = false
+      }, 300)
+    }
+  }, [activeTab, activeIndex])
+
+  // Detect scroll end and update active tab
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      // Clear any pending timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+
+      // Wait for scroll to settle before updating tab
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        // Don't update if this was a programmatic scroll
+        if (isScrollingRef.current) return
+
+        const containerWidth = container.offsetWidth
+        const scrollLeft = container.scrollLeft
+        const newIndex = Math.round(scrollLeft / containerWidth)
+
+        if (newIndex >= 0 && newIndex < tabIds.length) {
+          const newTab = tabIds[newIndex]
+          if (newTab !== activeTab) {
+            onTabChange(newTab)
+          }
+        }
+      }, 50)
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
       }
     }
-
-    // Snap back to position
-    controls.start({ x: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } })
-  }
-
-  const handleDrag = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo
-  ) => {
-    // Apply rubber-band effect at edges
-    const offset = info.offset.x
-    let resistance = 1
-
-    if ((offset > 0 && isFirstTab) || (offset < 0 && isLastTab)) {
-      resistance = 0.3 // Rubber-band feel
-    }
-
-    controls.set({ x: offset * resistance })
-  }
+  }, [activeTab, tabIds, onTabChange])
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        overflow: 'hidden',
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      <motion.div
-        drag="x"
-        dragDirectionLock
-        dragElastic={0}
-        dragMomentum={false}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
-        animate={controls}
-        style={{
-          flex: 1,
-          minHeight: 0,
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          touchAction: 'pan-y'
-        }}
-      >
-        {children}
-      </motion.div>
+    <div ref={containerRef} className="swipe-container">
+      {children}
     </div>
   )
 }
